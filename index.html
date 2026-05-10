@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CargoConnect | Smart Logistics Lobby</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gold: #ffc107;
+            --dark-bg: #000000;
+            --light-gray: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-gray);
+            color: #000;
+            scroll-behavior: smooth;
+            margin: 0;
+        }
+
+        .navbar-custom {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 5%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            font-weight: 400;
+        }
+
+        .nav-links a:hover:not(.pill-link) {
+            color: var(--primary-gold);
+        }
+
+        .auth-pill {
+            display: inline-flex;
+            align-items: center;
+            border: 2px solid var(--primary-gold);
+            border-radius: 50px;
+            padding: 6px 20px;
+            margin-left: 25px;
+            background: transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .auth-pill a.pill-link {
+            margin: 0 5px;
+            font-weight: 700;
+            color: var(--primary-gold) !important;
+            letter-spacing: 0.5px;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .auth-pill span {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 300;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+
+        .auth-pill:hover {
+            background: var(--primary-gold);
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .auth-pill:hover a.pill-link {
+            color: var(--dark-bg) !important;
+        }
+
+        .auth-pill:hover span {
+            color: rgba(0, 0, 0, 0.4) !important;
+        }
+
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                        url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span {
+            color: var(--primary-gold);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            opacity: 0.9;
+        }
+
+        .section-padding {
+            padding: 100px 10%;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .service-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            border-bottom: 5px solid var(--dark-bg);
+            transition: 0.3s;
+            text-align: center;
+            height: 100%;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-gold);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .pricing-card {
+            background: white;
+            padding: 45px 30px;
+            border-radius: 22px;
+            text-align: center;
+            transition: 0.3s;
+            border: 1px solid #eee;
+            height: 100%;
+            border-bottom: 5px solid var(--dark-bg);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: var(--primary-gold);
+        }
+
+        .pricing-card.featured {
+            background: var(--dark-bg);
+            color: white;
+            border: 2px solid var(--primary-gold);
+            border-bottom: 5px solid var(--primary-gold);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .price {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--primary-gold);
+            margin: 20px 0;
+        }
+
+        .pricing-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 25px 0;
+        }
+
+        .pricing-card li {
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .pricing-card li i {
+            color: var(--primary-gold);
+            margin-right: 8px;
+        }
+
+        .dev-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.02);
+            height: 100%;
+        }
+
+        .dev-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-gold);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .dev-img-placeholder {
+            width: 80px;
+            height: 80px;
+            background: var(--dark-bg);
+            color: var(--primary-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-weight: 700;
+            border: 3px solid var(--primary-gold);
+        }
+
+        .btn-gold {
+            background: var(--primary-gold);
+            color: var(--dark-bg);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+            border: none;
+        }
+
+        .btn-gold:hover {
+            background: white;
+            color: black;
+            transform: scale(1.05);
+        }
+
+        .btn-dark-pill {
+            background: #000;
+            color: var(--primary-gold);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+            border: 2px solid #000;
+        }
+
+        .btn-dark-pill:hover {
+            background: var(--primary-gold);
+            color: #000;
+        }
+
+        footer {
+            background: var(--dark-bg);
+            color: rgba(255,255,255,0.6);
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-custom {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-links a {
+                margin: 6px 10px;
+            }
+
+            .auth-pill {
+                margin-left: 0;
+            }
+
+            .hero h1 {
+                font-size: 3rem;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .pricing-card.featured:hover {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar-custom">
+    <img src="C:\Users\giana.LAPTOP-T815TB3S\OneDrive\Documents\Cargo Connect\PICTURES\LOGO.png" width="125" height="60">
+
+    <div class="nav-links">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#developers">Devs</a>
+
+        <div class="auth-pill" onclick="window.location.href='login.html'">
+            <a href="login.html" class="pill-link">Login</a>
+            <span>|</span>
+            <a href="register.html" class="pill-link" onclick="event.stopPropagation();">Register</a>
+        </div>
+    </div>
+</nav>
+
+<section id="home" class="hero">
+    <div class="hero-content">
+        <h1>CARGO<span>CONNECT</span></h1>
+        <p>The smartest way to manage your fleet and track shipments in real-time.</p>
+        <a href="register.html" class="btn-gold">GET STARTED NOW</a>
+    </div>
+</section>
+
+<section id="about" class="section-padding">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-md-6">
+                <h5 style="color: var(--primary-gold); font-weight: 600;">OUR MISSION</h5>
+                <h2 class="fw-bold mb-4" style="font-size: 2.5rem;">Modern Solutions for Global Logistics</h2>
+                <p>CargoConnect was built to solve the complexity of modern shipping. We ensure your cargo is always connected, from hub to hub, with total transparency.</p>
+            </div>
+
+            <div class="col-md-6">
+                <img src="https://images.unsplash.com/photo-1578575437130-527eed3abbec?q=80&w=1000" class="img-fluid rounded-4 shadow" alt="Logistics warehouse">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="services" class="section-padding" style="background: #f1f1f1;">
+    <h2 class="section-title">Core Services</h2>
+    <p class="text-center mb-5 text-muted">The backbone of your logistics operations</p>
+
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">📍</div>
+                    <h4 class="fw-bold">Real-time Tracking</h4>
+                    <p>Track your shipments with clear status updates from booking to delivery.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">📦</div>
+                    <h4 class="fw-bold">Express Booking</h4>
+                    <p>Create shipments fast with route, cargo, payment, and waybill records.</p>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="service-card">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">🚚</div>
+                    <h4 class="fw-bold">Door-to-Door Delivery</h4>
+                    <p>Move cargo from hub transit to out-for-delivery and straight to the receiver.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="pricing" class="section-padding">
+    <h2 class="section-title">Pricing</h2>
+    <p class="text-center mb-5 text-muted">Simple pricing for school-project logistics simulation</p>
+
+    <div class="container">
+        <div class="row g-4 justify-content-center align-items-stretch">
+            <div class="col-md-4">
+                <div class="pricing-card">
+                    <h4 class="fw-bold">Hub-to-Hub</h4>
+                    <p class="text-muted">Best for standard cargo pickup at destination hub.</p>
+                    <div class="price">₱150+</div>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> Base booking included</li>
+                        <li><i class="fa-solid fa-check"></i> Real-time shipment status</li>
+                        <li><i class="fa-solid fa-check"></i> Printable waybill</li>
+                        <li><i class="fa-solid fa-check"></i> Hub pickup delivery flow</li>
+                    </ul>
+                    <a href="register.html" class="btn-dark-pill">Start Booking</a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="pricing-card featured">
+                    <h4 class="fw-bold">Door-to-Door</h4>
+                    <p style="color: rgba(255,255,255,0.7);">Best for direct delivery to the receiver address.</p>
+                    <div class="price">₱350+</div>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> Includes hub-to-hub movement</li>
+                        <li><i class="fa-solid fa-check"></i> Out-for-delivery status</li>
+                        <li><i class="fa-solid fa-check"></i> Receiver address handling</li>
+                        <li><i class="fa-solid fa-check"></i> Waybill email confirmation</li>
+                    </ul>
+                    <a href="register.html" class="btn-gold">Choose Plan</a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="pricing-card">
+                    <h4 class="fw-bold">Special Cargo</h4>
+                    <p class="text-muted">For fragile, perishable, or special-handling shipments.</p>
+                    <div class="price">Add-on</div>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> Fragile cargo support</li>
+                        <li><i class="fa-solid fa-check"></i> Perishable cargo support</li>
+                        <li><i class="fa-solid fa-check"></i> Weight and volume pricing</li>
+                        <li><i class="fa-solid fa-check"></i> Admin fleet assignment</li>
+                    </ul>
+                    <a href="register.html" class="btn-dark-pill">View Options</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="developers" class="section-padding" style="background: #f1f1f1;">
+    <h2 class="section-title">Special Thanks</h2>
+    <p class="text-center mb-5 text-muted">The developers who made CargoConnect possible</p>
+
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-3">
+                <div class="dev-card text-center">
+                    <div class="dev-img-placeholder">DEV</div>
+                    <h5 class="fw-bold mt-3">Gian Nicolas</h5>
+                    <p class="text-warning small fw-bold">Full Stack Developer</p>
+                    <p class="small">Built the system architecture.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="dev-card text-center">
+                    <div class="dev-img-placeholder">DEV</div>
+                    <h5 class="fw-bold mt-3">Basti Dunlao</h5>
+                    <p class="text-warning small fw-bold">UI/UX Designer</p>
+                    <p class="small">Focused on visual styles and responsive layout.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="dev-card text-center">
+                    <div class="dev-img-placeholder">DEV</div>
+                    <h5 class="fw-bold mt-3">Aedhan Bulaong</h5>
+                    <p class="text-warning small fw-bold">Database</p>
+                    <p class="small">Focused on the backend.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="dev-card text-center">
+                    <div class="dev-img-placeholder">DEV</div>
+                    <h5 class="fw-bold mt-3">Yosh Marcalinas</h5>
+                    <p class="text-warning small fw-bold">Database</p>
+                    <p class="small">Focused on the backend.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer>
+    <p>&copy; 2026 CargoConnect Logistics. All Rights Reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

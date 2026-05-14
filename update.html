@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Shipment - CargoConnect Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #ffc107; --black: #000; --bg: #f4f7f6; }
+        body { background-color: var(--bg); font-family: 'Poppins', sans-serif; overflow: hidden; display: flex; height: 100vh; }
+        
+        /* SIDEBAR - MATCHES DASHBOARD */
+        .sidebar { width: 175px; background: var(--black); color: white; display: flex; flex-direction: column; padding: 20px; flex-shrink: 0; }
+        .sidebar h2 { color: var(--gold); font-weight: 700; font-size: 1.2rem; margin-bottom: 40px; text-align: center; letter-spacing: 1px; }
+        .sidebar a { color: #fff; text-decoration: none; padding: 12px 15px; margin-bottom: 10px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; transition: 0.3s; }
+        .sidebar a:hover { background: rgba(255, 255, 255, 0.1); }
+        .sidebar a.active { background: var(--gold); color: var(--black); }
+
+        /* MAIN WORKSPACE */
+        .main-content { flex-grow: 1; overflow-y: auto; padding: 40px; }
+        
+        .admin-panel { 
+            background: #fff; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            border: 1px solid #eee;
+            overflow: hidden;
+        }
+
+        .panel-header { 
+            background: #f8f9fa; 
+            padding: 20px 30px; 
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-body { padding: 40px; }
+
+        /* FORM STYLING */
+        .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #666; letter-spacing: 0.5px; }
+        .form-control-static { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            color: var(--black); 
+            background: #fff;
+            border: 2px solid var(--black);
+            padding: 10px 20px;
+            display: inline-block;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .status-select {
+            height: 60px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding-left: 20px;
+            transition: 0.3s;
+        }
+        .status-select:focus { border-color: var(--gold); box-shadow: none; }
+
+        .btn-save {
+            background: var(--black);
+            color: var(--gold);
+            padding: 15px 40px;
+            font-weight: 700;
+            border-radius: 10px;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .btn-save:hover { background: #333; transform: translateY(-2px); color: #fff; }
+
+        .detail-item { margin-bottom: 20px; }
+        .detail-label { font-size: 11px; color: #999; font-weight: 700; text-transform: uppercase; }
+        .detail-value { font-size: 16px; font-weight: 600; color: #333; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <img src="LOGO.jpg" width="125px" height="60px">
+    <br>
+        <a href="shipments.html"></i>← Back to Shipments</a>
+</div>
+
+<!-- Main Workspace -->
+<div class="main-content">
+    <div class="mb-4">
+        <h1 class="h3 fw-bold">Update Shipment Logistics</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="shipments.html" class="text-dark">Shipments</a></li>
+                <li class="breadcrumb-item active">Update Status</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="admin-panel">
+        <div class="panel-header">
+            <h5 class="m-0 fw-bold">Modification Terminal</h5>
+            <span class="badge bg-dark px-3 py-2">LIVE DATABASE ACCESS</span>
+        </div>
+        
+        <div class="panel-body">
+            <div class="row">
+                <!-- Left Side: Form -->
+                <div class="col-lg-7 border-end pe-lg-5">
+                    <label class="form-label">Active Tracking ID</label>
+                    <div><span class="form-control-static" id="displayID">CC-000000</span></div>
+
+                    <div class="mb-4">
+                        <label class="form-label" for="newStatus">Change Delivery Status</label>
+                        <select id="newStatus" class="form-select status-select">
+                            <option value="Pending Confirmation">Pending Confirmation</option>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Delivered">Delivered</option>
+                        </select>
+                        <div class="form-text mt-2 text-muted">Updating to "Delivered" will automatically release the assigned vehicle to its destination hub.</div>
+                    </div>
+
+                    <div class="d-flex gap-3 pt-3">
+                        <button class="btn btn-save" onclick="saveUpdate()">Commit Changes</button>
+                        <a href="shipments.html" class="btn btn-outline-secondary px-4 d-flex align-items-center">Discard</a>
+                    </div>
+                </div>
+
+                <!-- Right Side: Quick Info Reference -->
+                <div class="col-lg-5 ps-lg-5">
+                    <h6 class="fw-bold mb-4 text-uppercase small" style="letter-spacing: 1px;">Route Summary</h6>
+                    
+                    <div class="row">
+                        <div class="col-6 detail-item">
+                            <div class="detail-label">Sender</div>
+                            <div class="detail-value" id="valSender">---</div>
+                        </div>
+                        <div class="col-6 detail-item">
+                            <div class="detail-label">Receiver</div>
+                            <div class="detail-value" id="valReceiver">---</div>
+                        </div>
+                        <div class="col-12 detail-item">
+                            <div class="detail-label">Current Route</div>
+                            <div class="detail-value"><span id="valOrigin">---</span> ➔ <span id="valDest" class="text-primary">---</span></div>
+                        </div>
+                        <div class="col-12 detail-item">
+                            <div class="detail-label">Assigned Vehicle</div>
+                            <div class="detail-value" id="valVehicle">None</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mt-4 border-0">
+                        <small><b>Note:</b> Ensure all waybills are signed before marking as delivered.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ... existing head and styles ... -->
+<script>
+window.onload = function() {
+    // Check localStorage first, then URL parameters as a fallback
+    let id = localStorage.getItem('editingID');
+    
+    if(!id) {
+        const urlParams = new URLSearchParams(window.location.search);
+        id = urlParams.get('id');
+    }
+
+    const data = JSON.parse(localStorage.getItem(id));
+    
+    if(data) {
+        document.getElementById('displayID').innerText = data.id;
+        document.getElementById('newStatus').value = data.status;
+        
+        // Populate Reference Data
+        document.getElementById('valSender').innerText = data.sender || "N/A";
+        document.getElementById('valReceiver').innerText = data.receiver || "N/A";
+        document.getElementById('valOrigin').innerText = data.origin || "N/A";
+        document.getElementById('valDest').innerText = data.destination || "N/A";
+        document.getElementById('valVehicle').innerText = data.vehicleID || "Unassigned";
+        
+        // Store ID back to localStorage to keep saveUpdate() working
+        localStorage.setItem('editingID', data.id);
+    } else {
+        alert("Error: Shipment data not found.");
+        window.location.href = "shipments.html";
+    }
+};
+
+function saveUpdate() {
+    const id = localStorage.getItem('editingID');
+    let shipment = JSON.parse(localStorage.getItem(id));
+    
+    if (!shipment) return;
+
+    const newStatus = document.getElementById('newStatus').value;
+    shipment.status = newStatus;
+    localStorage.setItem(id, JSON.stringify(shipment));
+
+    // Fleet Logic: Auto-update vehicle status and location
+    if (shipment.vehicleID) {
+        const vehicleKey = "FLT_" + shipment.vehicleID;
+        let vehicle = JSON.parse(localStorage.getItem(vehicleKey));
+
+        if (vehicle) {
+            if (newStatus === "In Transit") {
+                vehicle.status = "On Transit";
+                vehicle.nextDest = shipment.destination;
+            } 
+            else if (newStatus === "Delivered") {
+                vehicle.currentLoc = shipment.destination; // Vehicle is now at the destination hub
+                vehicle.status = "Available";
+                vehicle.nextDest = "---"; 
+            }
+            else if (newStatus === "Pending Confirmation") {
+                vehicle.status = "Booked";
+            }
+            localStorage.setItem(vehicleKey, JSON.stringify(vehicle));
+        }
+    }
+
+    alert("Success: Database Records Updated.");
+    window.location.href = "shipments.html";
+}
+</script>
+
+</body>
+</html>

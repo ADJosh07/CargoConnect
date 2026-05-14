@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CargoConnect API Tester</title>
+    <style>
+        body { font-family: Arial; max-width: 900px; margin: 50px auto; }
+        .test-section { border: 1px solid #ddd; padding: 15px; margin: 10px 0; background: #f9f9f9; }
+        .result { border-left: 4px solid #333; padding: 10px; margin: 10px 0; background: white; }
+        .success { border-color: green; background: #e8f5e9; }
+        .error { border-color: red; background: #ffebee; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        input { padding: 8px; margin: 5px; width: 250px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 CargoConnect API Tester</h1>
+    
+    <div class="test-section">
+        <h2>1. Database Connection Test</h2>
+        <button onclick="testConnection()">Test DB Connection</button>
+        <div id="connectionResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. API Endpoints Test</h2>
+        <button onclick="testLoginEndpoint()">Test /backend/api/login.php</button>
+        <button onclick="testRegisterEndpoint()">Test /backend/api/register.php</button>
+        <div id="endpointResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. User Registration Test</h2>
+        <input type="text" id="regName" placeholder="Full Name" value="Test User">
+        <input type="email" id="regEmail" placeholder="Email" value="testuser@example.com">
+        <input type="text" id="regPhone" placeholder="Phone" value="09123456789">
+        <input type="text" id="regAddress" placeholder="Address" value="123 Test St">
+        <input type="password" id="regPassword" placeholder="Password" value="Test1234">
+        <button onclick="testRegister()">Register Test User</button>
+        <div id="registerResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. User Login Test</h2>
+        <input type="email" id="loginEmail" placeholder="Email" value="testuser@example.com">
+        <input type="password" id="loginPassword" placeholder="Password" value="Test1234">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <script>
+        const API_BASE = '../backend';
+
+        async function testConnection() {
+            const result = document.getElementById('connectionResult');
+            try {
+                const response = await fetch(`${API_BASE}/test-connection.php`);
+                const data = await response.json();
+                result.innerHTML = `<div class="result ${data.success ? 'success' : 'error'}">
+                    <strong>${data.success ? '✓ Success' : '✗ Failed'}</strong>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>`;
+            } catch (e) {
+                result.innerHTML = `<div class="result error"><strong>✗ Error</strong><pre>${e.message}</pre></div>`;
+            }
+        }
+
+        async function testLoginEndpoint() {
+            const result = document.getElementById('endpointResult');
+            try {
+                const response = await fetch(`${API_BASE}/api/login.php`, {
+                    method: 'GET'
+                });
+                const text = await response.text();
+                const isJSON = text.startsWith('{');
+                result.innerHTML = `<div class="result ${response.ok ? 'success' : 'error'}">
+                    <strong>Status: ${response.status}</strong>
+                    <p>Content-Type: ${response.headers.get('content-type')}</p>
+                    <p>Response is JSON: ${isJSON ? 'Yes' : 'No (Likely Error)'}</p>
+                    <pre>${text.substring(0, 500)}</pre>
+                </div>`;
+            } catch (e) {
+                result.innerHTML = `<div class="result error"><strong>✗ Error</strong><pre>${e.message}</pre></div>`;
+            }
+        }
+
+        async function testRegisterEndpoint() {
+            const result = document.getElementById('endpointResult');
+            try {
+                const response = await fetch(`${API_BASE}/api/register.php`, {
+                    method: 'GET'
+                });
+                const text = await response.text();
+                const isJSON = text.startsWith('{');
+                result.innerHTML = `<div class="result ${response.ok ? 'success' : 'error'}">
+                    <strong>Status: ${response.status}</strong>
+                    <p>Content-Type: ${response.headers.get('content-type')}</p>
+                    <p>Response is JSON: ${isJSON ? 'Yes' : 'No (Likely Error)'}</p>
+                    <pre>${text.substring(0, 500)}</pre>
+                </div>`;
+            } catch (e) {
+                result.innerHTML = `<div class="result error"><strong>✗ Error</strong><pre>${e.message}</pre></div>`;
+            }
+        }
+
+        async function testRegister() {
+            const result = document.getElementById('registerResult');
+            const data = {
+                full_name: document.getElementById('regName').value,
+                email: document.getElementById('regEmail').value,
+                phone: document.getElementById('regPhone').value,
+                address: document.getElementById('regAddress').value,
+                password: document.getElementById('regPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/register.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await response.json();
+                result.innerHTML = `<div class="result ${json.success ? 'success' : 'error'}">
+                    <strong>${json.success ? '✓ Success' : '✗ Failed'}</strong>
+                    <pre>${JSON.stringify(json, null, 2)}</pre>
+                </div>`;
+            } catch (e) {
+                result.innerHTML = `<div class="result error"><strong>✗ Error</strong><pre>${e.message}</pre></div>`;
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('loginResult');
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/login.php`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await response.json();
+                result.innerHTML = `<div class="result ${json.success ? 'success' : 'error'}">
+                    <strong>${json.success ? '✓ Success' : '✗ Failed'}</strong>
+                    <pre>${JSON.stringify(json, null, 2)}</pre>
+                </div>`;
+            } catch (e) {
+                result.innerHTML = `<div class="result error"><strong>✗ Error</strong><pre>${e.message}</pre></div>`;
+            }
+        }
+    </script>
+</body>
+</html>

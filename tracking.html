@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Shipment | CargoConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary-gold: #ffc107; --dark-bg: #000000; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f8f9fa; padding-top: 100px; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .navbar-custom {
+            background: rgb(0, 0, 0); backdrop-filter: blur(10px);
+            padding: 15px 5%; position: fixed; width: 100%; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .navbar-custom h2 { color: var(--primary-gold); font-weight: 700; margin: 0; letter-spacing: 2px; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 25px; text-transform: uppercase; font-size: 0.9rem; transition: 0.3s; }
+        .nav-links a:hover { color: var(--primary-gold); }
+
+        .track-hero { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .track-card {
+            background: white; padding: 50px; border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center;
+            max-width: 600px; width: 100%; border-bottom: 5px solid var(--dark-bg);
+        }
+        .track-card h1 { font-weight: 700; color: var(--dark-bg); margin-bottom: 10px; }
+        .track-input-group { position: relative; margin-top: 30px; }
+        .track-input-group input {
+            width: 100%; padding: 18px 25px; border-radius: 50px;
+            border: 2px solid #eee; font-size: 1.1rem; transition: 0.3s; outline: none;
+        }
+        .track-input-group input:focus { border-color: var(--primary-gold); }
+        .track-btn {
+            position: absolute; right: 8px; top: 8px;
+            background: var(--dark-bg); color: var(--primary-gold);
+            border: none; padding: 10px 30px; border-radius: 50px;
+            font-weight: 700; transition: 0.3s;
+        }
+        .track-btn:hover { background: var(--primary-gold); color: var(--dark-bg); }
+
+        footer { background: var(--dark-bg); color: white; padding: 40px 0 20px; margin-top: 50px; }
+        .footer-bottom { text-align: center; border-top: 1px solid #333; padding-top: 20px; margin-top: 20px; color: #666; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar-custom">
+    <img src="LOGO.jpg" width="125px" height="60px">
+    <div class="nav-links">
+        <div class="nav-links">
+        <a href="home.html">
+            <i class="fa-solid fa-house"></i> Home
+        </a>
+        <a href="tracking.html">
+            <i class="fa-solid fa-location-dot"></i> Track
+        </a>
+        <a href="book.html">
+            <i class="fa-solid fa-file-pen"></i> Book
+        </a>
+        <a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a>
+        <a href="login.html">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+    </div>
+</nav>
+
+<div class="track-hero">
+    <div class="track-card">
+        <h1>Track Shipment</h1>
+        <p class="text-muted">Enter your Tracking ID to see live updates</p>
+        <div class="track-input-group">
+            <input type="text" id="trackInput" placeholder="Ex: CC12345">
+            <button class="track-btn" onclick="performTrack()">TRACK</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="container text-center">
+        <p>© 2026 CargoConnect Logistics Solutions</p>
+        <div class="footer-bottom">Trusted across Luzon, Visayas, and Mindanao</div>
+    </div>
+</footer>
+
+<script>
+function performTrack() {
+    const id = document.getElementById('trackInput').value.trim();
+    if(localStorage.getItem(id)) {
+        localStorage.setItem('activeID', id);
+        window.location.href = "details.html";
+    } else {
+        alert("Invalid Tracking ID. Please try again.");
+    }
+}
+</script>
+</body>
+</html>

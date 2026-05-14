@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shipments - CargoConnect Admin</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<style>
+:root { --gold: #ffc107; --black: #000; --bg: #f4f7f6; }
+
+body {
+    background-color: var(--bg);
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+}
+
+.sidebar {
+    width: 175px;
+    background: var(--black);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    flex-shrink: 0;
+}
+
+.sidebar a {
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.sidebar a:hover { background: rgba(255,255,255,0.1); }
+.sidebar a.active { background: var(--gold); color: var(--black); }
+
+.main-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 40px;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    border: 2px solid #000;
+    font-weight: 600;
+    box-shadow: 5px 5px 0px #000;
+    outline: none;
+}
+
+.shipment-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.shipment-table th {
+    background: #000;
+    color: #ffc107;
+    padding: 15px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.shipment-table tr {
+    background: #fff;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.shipment-table tbody tr {
+    cursor: pointer;
+}
+
+.shipment-table tbody tr:hover {
+    background: #fff9e6;
+}
+
+.shipment-table td {
+    padding: 15px;
+    vertical-align: middle;
+}
+
+.id-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #000;
+    font-weight: 800;
+    border-bottom: 2px solid #ffc107;
+    cursor: pointer;
+}
+
+#detailsModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-card {
+    background: #fff;
+    width: 580px;
+    max-height: 85vh;
+    border: 3px solid #000;
+    box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-header {
+    background: #000;
+    color: #ffc107;
+    padding: 15px 20px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    padding: 25px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.info-group {
+    margin-bottom: 5px;
+}
+
+.info-label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #888;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.info-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #000;
+    display: block;
+}
+
+.section-title {
+    grid-column: span 2;
+    font-size: 11px;
+    font-weight: 800;
+    background: #f0f0f0;
+    padding: 5px 10px;
+    margin: 10px 0;
+    text-transform: uppercase;
+    border-left: 4px solid #ffc107;
+}
+
+.notes-box {
+    grid-column: span 2;
+    background: #fff9e6;
+    border: 2px dashed #ffc107;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.validation-card {
+    display: none;
+    background: #fff9e6;
+    border: 2px solid #000;
+    border-left: 8px solid #ffc107;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 4px 4px 0 #000;
+}
+
+.validation-card.error {
+    background: #fff0f0;
+    border-left-color: #dc3545;
+}
+
+.validation-card.success {
+    background: #effaf3;
+    border-left-color: #198754;
+}
+
+.validation-card.warning {
+    background: #fff9e6;
+    border-left-color: #ffc107;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <img src="LOGO.jpg" width="125px" height="60px">
+    <br>
+    <a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+    <a href="shipments.html" class="active"><i class="fa-solid fa-truck-fast"></i> Shipments</a>
+    <a href="fleet.html"><i class="fa-solid fa-bus"></i> Fleet</a>
+    <a href="login.html" onclick="return confirmLogout(event)">
+        <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </a>
+</div>
+
+<div class="main-content">
+    <h2 class="fw-bold mb-3">Shipment Management</h2>
+    <div id="shipmentValidationCard" class="validation-card"></div>
+
+    <input id="searchInput" class="search-bar" placeholder="Search Tracking ID, Sender..." onkeyup="renderTable()">
+
+    <table class="shipment-table">
+        <thead>
+            <tr>
+                <th>Tracking ID</th>
+                <th>Sender</th>
+                <th>Route</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="shipmentTableBody"></tbody>
+    </table>
+</div>
+
+<div id="detailsModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h6 class="m-0 fw-bold">SHIPMENT MANIFEST</h6>
+            <button onclick="closeModal()" style="background:none;border:none;color:#ffc107;font-size:24px;cursor:pointer;">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <div id="modalContent" class="info-grid"></div>
+        </div>
+
+        <div class="p-3 border-top text-end bg-light">
+            <button class="btn btn-dark btn-sm px-5" onclick="closeModal()">DONE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+emailjs.init({
+    publicKey: "4VGsLav1IkhGx6c5j"
+});
+
+window.onload = function () {
+    setupShipmentClicks();
+    renderTable();
+};
+
+function safeParse(key) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+    } catch {
+        return null;
+    }
+}
+
+function esc(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function showValidation(message, type = "error") {
+    const card = document.getElementById("shipmentValidationCard");
+    if (!card) {
+        alert(message);
+        return;
+    }
+
+    card.className = "validation-card " + type;
+    card.innerHTML = message;
+    card.style.display = "block";
+
+    setTimeout(function () {
+        card.style.display = "none";
+    }, 4500);
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+
+    if (confirm("Are you sure you want to log out?")) {
+        window.location.href = "login.html";
+    }
+
+    return false;
+}
+
+function formatDateTime(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleString();
+}
+
+function getDefaultCapacity(type) {
+    const t = String(type || "").toLowerCase();
+
+    if (t.includes("motor") || t.includes("bike")) return 25;
+    if (t.includes("van")) return 1200;
+    if (t.includes("pickup")) return 1000;
+    if (t.includes("small truck")) return 3000;
+    if (t.includes("medium truck")) return 7000;
+    if (t.includes("large truck") || t === "truck") return 14000;
+    if (t.includes("trailer") || t.includes("semi")) return 24000;
+    if (t.includes("container")) return 28000;
+    if (t.includes("ship")) return 500000;
+
+    return 1000;
+}
+
+function getPaymentStatus(data) {
+    return data.paymentStatus || "Unpaid";
+}
+
+function getPaymentBadge(data) {
+    const status = getPaymentStatus(data);
+
+    if (status === "Paid") {
+        return `<span class="badge bg-success">Paid</span>`;
+    }
+
+    if (status === "Pending Verification") {
+        return `<span class="badge bg-warning text-dark">Pending Verification</span>`;
+    }
+
+    return `<span class="badge bg-danger">Unpaid</span>`;
+}
+
+function getShipmentKey(ref) {
+    if (localStorage.getItem(ref)) return ref;
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key.startsWith("CC")) continue;
+
+        const s = safeParse(key);
+        if (s && s.id === ref) return key;
+    }
+
+    return null;
+}
+
+function getVehicleKey(ref) {
+    if (localStorage.getItem(ref)) return ref;
+    if (localStorage.getItem("FLT_" + ref)) return "FLT_" + ref;
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key.startsWith("FLT_")) continue;
+
+        const v = safeParse(key);
+        if (v && v.id === ref) return key;
+    }
+
+    return null;
+}
+
+function sameVehicle(shipmentVehicleId, vehicle, fleetKey) {
+    if (!shipmentVehicleId || !vehicle) return false;
+
+    const a = String(shipmentVehicleId).trim();
+    const vehicleId = String(vehicle.id || "").trim();
+    const storageKey = String(fleetKey || vehicle.storageKey || "").trim();
+    const storageId = storageKey.replace("FLT_", "");
+
+    return a === vehicleId || a === storageKey || a === storageId;
+}
+
+function getVehicleLoadData(vehicleRef) {
+    const fleetKey = getVehicleKey(vehicleRef);
+    if (!fleetKey) return { count: 0, totalWeight: 0 };
+
+    const vehicle = safeParse(fleetKey);
+    if (!vehicle) return { count: 0, totalWeight: 0 };
+
+    let count = 0;
+    let totalWeight = 0;
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key.startsWith("CC")) continue;
+
+        const s = safeParse(key);
+        if (!s) continue;
+
+        if (sameVehicle(s.vehicleID, vehicle, fleetKey) && s.status !== "Delivered") {
+            count++;
+            totalWeight += parseFloat(s.weight || 0);
+        }
+    }
+
+    return { count, totalWeight };
+}
+
+function setupShipmentClicks() {
+    document.addEventListener("click", function (e) {
+        const btn = e.target.closest("[data-action]");
+        if (!btn) return;
+
+        const action = btn.dataset.action;
+
+        if (action !== "view") {
+            e.stopPropagation();
+        }
+
+        if (action === "view") viewDetails(btn.dataset.shipmentKey);
+        if (action === "confirm") confirmShipment(btn.dataset.shipmentKey);
+        if (action === "update") goToUpdate(btn.dataset.shipmentKey);
+        if (action === "open-assign") openAssignModal(btn.dataset.shipmentKey, btn.dataset.origin);
+        if (action === "select-vehicle") assignVehicle(btn.dataset.shipmentKey, btn.dataset.fleetKey);
+        if (action === "mark-paid") markPaymentPaid(btn.dataset.shipmentKey);
+    });
+}
+
+function renderTable() {
+    const tbody = document.getElementById("shipmentTableBody");
+    const search = (document.getElementById("searchInput")?.value || "").toLowerCase();
+
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    let found = 0;
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key.startsWith("CC")) continue;
+
+        const data = safeParse(key);
+        if (!data || !data.id) continue;
+        if (data.status === "Delivered") continue;
+
+        const idMatch = (data.id || "").toLowerCase();
+        const senderMatch = (data.sender || "").toLowerCase();
+
+        if (!idMatch.includes(search) && !senderMatch.includes(search)) continue;
+
+        found++;
+
+        const paymentStatus = getPaymentStatus(data);
+
+        let paymentBtn = "";
+        if (paymentStatus !== "Paid") {
+            paymentBtn = `
+                <button class="btn btn-outline-success btn-sm"
+                    data-action="mark-paid"
+                    data-shipment-key="${esc(key)}">
+                    Mark Paid
+                </button>`;
+        }
+
+        let actionBtn = "";
+
+        if (data.status === "Pending Confirmation") {
+            actionBtn = `
+                <button class="btn btn-success btn-sm"
+                    data-action="confirm"
+                    data-shipment-key="${esc(key)}">
+                    Confirm
+                </button>`;
+        } else if (data.status === "In Transit" || data.status === "In Hub" || data.status === "Out for Delivery") {
+            actionBtn = `<span class="badge bg-dark">Locked</span>`;
+        } else {
+            actionBtn = `
+                <button class="btn btn-dark btn-sm"
+                    data-action="update"
+                    data-shipment-key="${esc(key)}">
+                    Update
+                </button>`;
+        }
+
+        let assignBtn = "";
+
+        if (data.vehicleID) {
+            assignBtn = `<span class="badge bg-success">Assigned to ${esc(data.vehicleID)}</span>`;
+        } else if (data.status !== "Approved") {
+            assignBtn = `<span class="badge bg-secondary">Confirm first</span>`;
+        } else {
+            assignBtn = `
+                <button class="btn btn-warning btn-sm"
+                    data-action="open-assign"
+                    data-shipment-key="${esc(key)}"
+                    data-origin="${esc(data.origin || "")}">
+                    Assign
+                </button>`;
+        }
+
+        tbody.innerHTML += `
+        <tr data-action="view" data-shipment-key="${esc(key)}">
+            <td>
+                <button class="id-link" data-action="view" data-shipment-key="${esc(key)}">
+                    ${esc(data.id)}
+                </button>
+            </td>
+            <td>${esc(data.sender || "N/A")}</td>
+            <td>${esc(data.origin || "N/A")} → ${esc(data.destination || "N/A")}</td>
+            <td><span class="badge bg-dark">${esc(data.status || "Unknown")}</span></td>
+            <td>
+                ${getPaymentBadge(data)}
+                ${paymentBtn}
+            </td>
+            <td>
+                ${actionBtn}
+                ${assignBtn}
+                <a class="btn btn-warning btn-sm"
+                    href="waybill.html?id=${encodeURIComponent(data.id)}"
+                    target="_blank"
+                    onclick="event.stopPropagation();">
+                    Waybill
+                </a>
+            </td>
+        </tr>`;
+    }
+
+    if (found === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center fw-bold p-4">No active shipments found.</td></tr>`;
+    }
+}
+
+function markPaymentPaid(ref) {
+    const key = getShipmentKey(ref);
+
+    if (!key) {
+        showValidation("Shipment record not found.", "error");
+        return;
+    }
+
+    const data = safeParse(key);
+    if (!data) return;
+
+    if (data.paymentStatus === "Paid") {
+        showValidation("This shipment is already marked as paid.", "warning");
+        return;
+    }
+
+    if (!confirm("Mark payment as PAID for shipment " + data.id + "?")) {
+        showValidation("Payment update cancelled.", "warning");
+        return;
+    }
+
+    data.paymentStatus = "Paid";
+    data.paidAt = new Date().toLocaleString();
+    data.paidAtISO = new Date().toISOString();
+
+    localStorage.setItem(key, JSON.stringify(data));
+
+    showValidation("Payment marked as paid for shipment " + data.id + ".", "success");
+    renderTable();
+}
+
+function viewDetails(ref) {
+    const key = getShipmentKey(ref);
+
+    if (!key) {
+        showValidation("Shipment record not found.", "error");
+        return;
+    }
+
+    const data = safeParse(key);
+    if (!data) return;
+
+    const serviceType = (data.service || "").toLowerCase();
+    const hasAddress = data.address && data.address.trim() !== "";
+    const showAddress = serviceType.includes("door") || hasAddress;
+    const shipmentNotes = data.notes || data.note || data.instructions || data.specialNotes || "No special instructions provided.";
+    const bookedAt = data.timestamp || formatDateTime(data.createdAt) || "N/A";
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="section-title">Logistics Info</div>
+        <div class="info-group"><span class="info-label">Tracking ID</span><span class="info-value" style="color:#d9534f;">${esc(data.id || "N/A")}</span></div>
+        <div class="info-group"><span class="info-label">Current Status</span><span class="info-value text-primary">${esc(data.status || "Pending")}</span></div>
+        <div class="info-group"><span class="info-label">Booked At</span><span class="info-value">${esc(bookedAt)}</span></div>
+        <div class="info-group"><span class="info-label">In Transit At</span><span class="info-value">${esc(data.inTransitAt || formatDateTime(data.inTransitAtISO) || "Not yet")}</span></div>
+        <div class="info-group"><span class="info-label">Out for Delivery At</span><span class="info-value">${esc(data.outForDeliveryAt || data.inHubAt || formatDateTime(data.outForDeliveryAtISO || data.inHubAtISO) || "Not yet")}</span></div>
+        <div class="info-group"><span class="info-label">Delivered At</span><span class="info-value">${esc(data.deliveredAt || formatDateTime(data.deliveredAtISO) || "Not yet")}</span></div>
+        <div class="info-group"><span class="info-label">Service Mode</span><span class="info-value">${esc(data.service || "Standard")}</span></div>
+        <div class="info-group"><span class="info-label">Cargo Type</span><span class="info-value">${esc(data.cargoType || "Standard")}</span></div>
+        <div class="info-group"><span class="info-label">Weight</span><span class="info-value">${esc(data.weight || "0")} kg</span></div>
+        <div class="info-group"><span class="info-label">Cubic Meters</span><span class="info-value">${esc(data.cubicMeters || "N/A")} m³</span></div>
+        <div class="info-group"><span class="info-label">Contact</span><span class="info-value">${esc(data.contact || "No Contact Number")}</span></div>
+        <div class="info-group"><span class="info-label">Assigned Vehicle</span><span class="info-value">${esc(data.vehicleID || "Not assigned")}</span></div>
+
+        <div class="section-title">Payment</div>
+        <div class="info-group"><span class="info-label">Payment Method</span><span class="info-value">${esc(data.paymentMethod || "N/A")}</span></div>
+        <div class="info-group"><span class="info-label">Payment Status</span><span class="info-value">${esc(data.paymentStatus || "Unpaid")}</span></div>
+        <div class="info-group"><span class="info-label">Payment Ref</span><span class="info-value">${esc(data.paymentReference || "N/A")}</span></div>
+        <div class="info-group"><span class="info-label">Amount</span><span class="info-value">₱${esc((data.estimatedCost || data.paymentAmount || 0).toLocaleString ? (data.estimatedCost || data.paymentAmount || 0).toLocaleString() : data.estimatedCost || data.paymentAmount || "0")}</span></div>
+        <div class="info-group"><span class="info-label">Paid At</span><span class="info-value">${esc(data.paidAt || "Not paid yet")}</span></div>
+
+        <div class="section-title">Customer Details</div>
+        <div class="info-group"><span class="info-label">Sender Name</span><span class="info-value">${esc(data.sender || "---")}</span></div>
+        <div class="info-group"><span class="info-label">Receiver Name</span><span class="info-value">${esc(data.receiver || "---")}</span></div>
+        <div class="info-group"><span class="info-label">Customer Email</span><span class="info-value">${esc(findCustomerEmail(data) || "---")}</span></div>
+
+        <div class="section-title">Route & Destination</div>
+        <div class="info-group"><span class="info-label">Origin Hub</span><span class="info-value">${esc(data.origin || "---")}</span></div>
+        <div class="info-group"><span class="info-label">Destination Hub</span><span class="info-value">${esc(data.destination || "---")}</span></div>
+
+        ${
+            showAddress
+                ? `
+                    <div class="info-group" style="grid-column: span 2;">
+                        <span class="info-label">Complete Delivery Address</span>
+                        <span class="info-value">${esc(data.address)}</span>
+                    </div>
+                `
+                : `
+                    <div class="info-group" style="grid-column: span 2; opacity: 0.7;">
+                        <span class="info-label">Pickup Type</span>
+                        <span class="info-value">Station Pickup (Hub-to-Hub)</span>
+                    </div>
+                `
+        }
+
+        <div class="section-title">Special Notes / Instructions</div>
+        <div class="notes-box">
+            <span class="info-value" style="font-weight: 500; line-height: 1.5;">${esc(shipmentNotes)}</span>
+        </div>
+    `;
+
+    document.getElementById("detailsModal").style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("detailsModal").style.display = "none";
+}
+
+function findCustomerEmail(data) {
+    if (data.customerEmail) return data.customerEmail;
+
+    try {
+        const users = JSON.parse(localStorage.getItem("cargoConnectUsers")) || [];
+
+        const matchedUser = users.find(function(user) {
+            const sameName = String(user.fullName || "").trim().toLowerCase() === String(data.customerAccountName || data.sender || "").trim().toLowerCase();
+            const sameContact = String(user.contactNumber || "").trim() === String(data.contact || "").trim();
+
+            return sameName || sameContact;
+        });
+
+        return matchedUser ? matchedUser.email : "";
+    } catch {
+        return "";
+    }
+}
+
+function getWaybillUrl(shipmentID) {
+    const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
+    return currentPath + "waybill.html?id=" + encodeURIComponent(shipmentID);
+}
+
+function emailWaybill(data) {
+    const email = findCustomerEmail(data);
+
+    if (!email) {
+        showValidation("Shipment confirmed, but no customer email was found for this booking.", "warning");
+        return;
+    }
+
+    const templateParams = {
+        to_email: email,
+        to_name: data.sender || data.customerAccountName || "Customer",
+        tracking_id: data.id,
+        status: data.status,
+        route: (data.origin || "---") + " to " + (data.destination || "---"),
+        service_type: data.service || "Hub-to-Hub",
+        payment_amount: "PHP " + Number(data.paymentAmount || data.estimatedCost || 0).toLocaleString(),
+        waybill_url: getWaybillUrl(data.id)
+    };
+
+    console.log("Sending waybill to:", email);
+    console.log("EmailJS params:", templateParams);
+
+    emailjs.send("service_ld5coia", "template_oux2nle", templateParams)
+        .then(function () {
+            showValidation("Shipment confirmed and waybill email sent to " + email + ".", "success");
+        })
+        .catch(function (error) {
+            console.error("EmailJS error:", error);
+            showValidation("Shipment confirmed, but the waybill email failed to send. Check EmailJS setup.", "error");
+        });
+}
+
+function confirmShipment(ref) {
+    const key = getShipmentKey(ref);
+
+    if (!key) {
+        showValidation("Shipment record not found.", "error");
+        return;
+    }
+
+    const data = safeParse(key);
+    if (!data) return;
+
+    if (data.status !== "Pending Confirmation") {
+        showValidation("Only pending shipments can be confirmed.", "warning");
+        return;
+    }
+
+    if (getPaymentStatus(data) !== "Paid") {
+        showValidation("Payment must be marked as paid before confirming this shipment.", "error");
+        return;
+    }
+
+    if (!data.origin || !data.destination || !data.sender || !data.receiver) {
+        showValidation("This shipment has missing customer or route details. Please update it first.", "error");
+        return;
+    }
+
+    if (!confirm("Confirm shipment " + data.id + "?")) {
+        showValidation("Confirmation cancelled.", "warning");
+        return;
+    }
+
+    data.status = "Approved";
+    data.confirmedAt = new Date().toLocaleString();
+    data.confirmedAtISO = new Date().toISOString();
+
+    localStorage.setItem(key, JSON.stringify(data));
+
+    showValidation("Shipment " + data.id + " confirmed successfully. Sending waybill email...", "success");
+    renderTable();
+    emailWaybill(data);
+}
+
+function goToUpdate(ref) {
+    const key = getShipmentKey(ref);
+
+    if (!key) {
+        showValidation("Shipment record not found.", "error");
+        return;
+    }
+
+    const data = safeParse(key);
+
+    if (data && (data.status === "In Transit" || data.status === "In Hub" || data.status === "Out for Delivery")) {
+        showValidation("This shipment is already moving and should not be edited here.", "warning");
+        return;
+    }
+
+    localStorage.setItem("editingID", key);
+    window.location.href = "update.html";
+}
+
+function openAssignModal(shipmentRef, origin) {
+    const shipmentKey = getShipmentKey(shipmentRef);
+
+    if (!shipmentKey) {
+        showValidation("Shipment record not found.", "error");
+        return;
+    }
+
+    const shipment = safeParse(shipmentKey);
+    if (!shipment) return;
+
+    if (shipment.status !== "Approved") {
+        showValidation("Confirm the shipment before assigning it to a fleet vehicle.", "warning");
+        return;
+    }
+
+    if (!shipment.origin) {
+        showValidation("Shipment origin is missing. Update the shipment first.", "error");
+        return;
+    }
+
+    const shipmentWeight = parseFloat(shipment.weight || 0);
+
+    if (!shipmentWeight || shipmentWeight <= 0) {
+        showValidation("Shipment weight is missing or invalid. Update the shipment first.", "error");
+        return;
+    }
+
+    let html = `<div class="section-title">Available Fleet (${esc(origin)})</div>`;
+    let found = false;
+
+    const originClean = (origin || "").trim().toLowerCase();
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const fleetKey = localStorage.key(i);
+        if (!fleetKey.startsWith("FLT_")) continue;
+
+        const v = safeParse(fleetKey);
+        if (!v) continue;
+
+        const hub = (v.currentLoc || "").trim().toLowerCase();
+        const maxCap = parseFloat(v.maxCap || getDefaultCapacity(v.type));
+        const load = getVehicleLoadData(fleetKey);
+        const remaining = maxCap - load.totalWeight;
+        const canFit = shipmentWeight <= remaining;
+
+        if (hub === originClean && v.status !== "Dispatched" && canFit) {
+            found = true;
+
+            html += `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;border:2px solid #000;border-radius:10px;padding:12px;">
+                <span>
+                    <b>${esc(v.id || fleetKey)}</b> (${esc(v.type || "Vehicle")})<br>
+                    <small>${load.totalWeight.toFixed(2)} / ${maxCap.toFixed(2)} kg used</small>
+                </span>
+                <button class="btn btn-dark btn-sm"
+                    data-action="select-vehicle"
+                    data-shipment-key="${esc(shipmentKey)}"
+                    data-fleet-key="${esc(fleetKey)}">
+                    Select
+                </button>
+            </div>`;
+        }
+    }
+
+    if (!found) {
+        html += `<div class="notes-box">No available vehicle in this hub has enough remaining capacity.</div>`;
+    }
+
+    document.getElementById("modalContent").innerHTML = html;
+    document.getElementById("detailsModal").style.display = "flex";
+}
+
+function assignVehicle(shipmentRef, fleetRef) {
+    const shipmentKey = getShipmentKey(shipmentRef);
+    const fleetKey = getVehicleKey(fleetRef);
+
+    if (!shipmentKey || !fleetKey) {
+        showValidation("Shipment or fleet record was not found.", "error");
+        return;
+    }
+
+    const data = safeParse(shipmentKey);
+    const vehicle = safeParse(fleetKey);
+
+    if (!data || !vehicle) {
+        showValidation("Shipment or fleet data is missing.", "error");
+        return;
+    }
+
+    if (data.status !== "Approved") {
+        showValidation("Only approved shipments can be assigned.", "warning");
+        return;
+    }
+
+    if (vehicle.status === "Dispatched") {
+        showValidation("This vehicle is already dispatched.", "error");
+        return;
+    }
+
+    const shipmentWeight = parseFloat(data.weight || 0);
+    const maxCap = parseFloat(vehicle.maxCap || getDefaultCapacity(vehicle.type));
+    const load = getVehicleLoadData(fleetKey);
+
+    if (!shipmentWeight || shipmentWeight <= 0) {
+        showValidation("Shipment weight is invalid. Update the shipment first.", "error");
+        return;
+    }
+
+    if (load.totalWeight + shipmentWeight > maxCap) {
+        showValidation("This fleet is already full. Choose another vehicle.", "error");
+        return;
+    }
+
+    if (!confirm("Assign shipment " + data.id + " to " + vehicle.id + "?")) {
+        showValidation("Assignment cancelled.", "warning");
+        return;
+    }
+
+    data.vehicleID = vehicle.id || fleetKey.replace("FLT_", "");
+    data.status = "Assigned";
+
+    localStorage.setItem(shipmentKey, JSON.stringify(data));
+
+    closeModal();
+    showValidation("Shipment " + data.id + " assigned to " + data.vehicleID + ".", "success");
+    renderTable();
+}
+</script>
+
+
+</body>
+</html>

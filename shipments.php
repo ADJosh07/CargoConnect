@@ -148,9 +148,21 @@ function getAllShipments() {
 
 // Handle requests based on method
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Check if customer_id is provided (for customer view) or admin token
+    // Check if customer_id is provided (for customer view) or user_id (for admin access)
     $customerId = $_GET['customer_id'] ?? null;
-    $isAdmin = isset($_GET['admin']) && $_GET['admin'] === 'true'; // Simple admin check, improve with JWT in production
+    $userId = $_GET['user_id'] ?? null;
+    if (!$userId) { $userId = $_GET['admin_user_id'] ?? null; }
+
+    // NOTE: This endpoint does not use query-string flags like ?admin=true.
+    // Admin access is determined by role in the DB.
+    // If user_id/admin_user_id is missing, do not allow admin access.
+    
+    $pdo = getDBConnection();
+    $stmt = $pdo->prepare("SELECT user_role FROM users WHERE user_id = :user_id LIMIT 1");
+    $stmt->execute(['user_id' => $userId]);
+    $roleRow = $stmt->fetch();
+    $isAdmin = $roleRow && $roleRow['user_role'] === 'admin';
+    closeDBConnection($pdo);
 
     if ($isAdmin) {
         $shipments = getAllShipments();

@@ -152,7 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
 
-    // Validate user_id
+    // Validate user_id     
     if (!isset($input['user_id'])) {
         echo json_encode([
             'success' => false,

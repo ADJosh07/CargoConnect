@@ -10,28 +10,91 @@ const API_BASE_URL = '../backend/api'; // Base URL for API endpoints
 /**
  * Makes an API call to the backend
  * @param {string} endpoint - API endpoint (e.g., 'login.php')
+ * @param {string} method - HTTP method (POST, GET, PUT, DELETE)
  * @param {object} data - Data to send in the request body
  * @returns {Promise} - Promise that resolves to the API response
  */
-async function apiCall(endpoint, data) {
+async function apiCall(endpoint, method = 'POST', data = null) {
     try {
-        const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-            method: 'POST',
+        const options = {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+            }
+        };
 
-        const result = await response.json();
-
-        if (!result.success) {
-            throw new Error(result.message || 'API call failed');
+        if (data) {
+            options.body = JSON.stringify(data);
         }
 
-        return result;
+        const response = await fetch(`${API_BASE_URL}/${endpoint}`, options);
+
+        // Check if response is ok
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        // Check content type to ensure we're getting JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('Non-JSON response received:', text);
+            throw new Error('Server returned non-JSON response. This usually means the API endpoint is not found or the server returned an error page.');
+        }
+
+        return await response.json();
     } catch (error) {
         console.error('API Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Wrapper for POST requests
+ */
+async function apiPost(endpoint, data) {
+    return apiCall(endpoint, 'POST', data);
+}
+
+/**
+ * Wrapper for GET requests
+ */
+async function apiGet(endpoint) {
+    return apiCall(endpoint, 'GET');
+}
+
+/**
+ * Wrapper for PUT requests
+ */
+async function apiPut(endpoint, data) {
+    return apiCall(endpoint, 'PUT', data);
+}
+
+/**
+ * Gets current user profile from database via API
+ */
+async function fetchUserProfile(userId) {
+    try {
+const result = await apiGet(`users.php?user_id=${userId}`);
+        return result.user || null;
+    } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        return null;
+    }
+}
+
+/**
+ * Updates user profile in database via API
+ */
+async function updateUserProfile(userId, profileData) {
+    try {
+        const result = await apiPut('users.php', {
+            user_id: userId,
+            ...profileData
+        });
+        return result;
+    } catch (error) {
+        console.error('Failed to update user profile:', error);
         throw error;
     }
 }
@@ -73,7 +136,7 @@ async function registerUser(event) {
 
     try {
         // Call backend registration API
-        const result = await apiCall('register.php', {
+const result = await apiPost('register.php', {
             full_name: fullName,
             email: email,
             phone: contactNumber,
@@ -106,10 +169,14 @@ async function loginUser(event) {
 
     try {
         // Call backend login API
-        const result = await apiCall('login.php', {
+const result = await apiPost('login.php', {
             email: usernameOrEmail, // Backend expects 'email' field
             password: password
         });
+
+        if (!result.success) {
+            throw new Error(result.message || 'Login failed');
+        }
 
         // Store user session in localStorage (temporary client-side session)
         // This is separate from the permanent SQL storage

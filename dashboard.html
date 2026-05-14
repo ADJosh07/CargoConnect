@@ -69,8 +69,7 @@
 <body>
 
 <div class="sidebar">
-    <img src="C:\Users\giana.LAPTOP-T815TB3S\OneDrive\Documents\Cargo Connect\PICTURES\LOGO.png"
-    width=125px" height="60px">
+    <img src="LOGO.jpg" width="125px" height="60px">
     <br>
     <a href="dashboard.html" class="active"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
         <a href="shipments.html"><i class="fa-solid fa-truck-fast"></i> Shipments</a>
@@ -130,7 +129,21 @@
 </div>
 
 <script>
-window.onload = function() { updateDashboard(); };
+window.onload = function() {
+    try {
+        const user = JSON.parse(localStorage.getItem('cargoConnectCurrentUser'));
+        if (!user || user.role !== 'admin') {
+            localStorage.removeItem('cargoConnectCurrentUser');
+            window.location.href = 'login.html';
+            return;
+        }
+    } catch (e) {
+        localStorage.removeItem('cargoConnectCurrentUser');
+        window.location.href = 'login.html';
+        return;
+    }
+    updateDashboard();
+};
 
 function updateDashboard() {
     let total = 0, transit = 0, delivered = 0, pending = 0;

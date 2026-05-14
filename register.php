@@ -70,7 +70,7 @@ function registerUser($userData) {
         return ['success' => true, 'message' => 'Registration successful', 'user_id' => $userId];
 
     } catch (PDOException $e) {
-        $pdo->rollBack();
+        if ($pdo) $pdo->rollBack();
         error_log("Registration error: " . $e->getMessage());
         return ['success' => false, 'message' => 'Registration failed. Please try again.'];
     } finally {

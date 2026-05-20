@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Manifest | CargoConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gold: #ffc107;
+            --dark-bg: #000000;
+            --sidebar-width: 175px;
+        }
+
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; margin: 0; display: flex; }
+
+        .sidebar {
+            width: var(--sidebar-width); height: 100vh; background: var(--dark-bg);
+            color: white; position: fixed; padding: 30px 20px; display: flex; flex-direction: column;
+            border-right: 3px solid var(--primary-gold);
+        }
+
+        .sidebar a { color: white; text-decoration: none; font-weight: 600; padding: 12px 15px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); transition: 0.3s; }
+        .sidebar a:hover { background: var(--primary-gold); color: black; }
+
+        .main-content { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 50px; }
+        .manifest-container { background: white; border-radius: 20px; padding: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-top: 12px solid var(--dark-bg); }
+
+        .header-section { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        .vhc-info h1 { font-weight: 800; margin: 0; color: var(--dark-bg); text-transform: uppercase; font-size: 2.8rem; }
+        .hub-label { background: var(--dark-bg); color: var(--primary-gold); padding: 5px 15px; border-radius: 5px; font-weight: 700; text-transform: uppercase; }
+
+        .validation-card {
+            display: none;
+            background: #fff9e6;
+            border: 2px solid #000;
+            border-left: 8px solid #ffc107;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 4px 4px 0 #000;
+        }
+
+        .validation-card.error {
+            background: #fff0f0;
+            border-left-color: #dc3545;
+        }
+
+        .validation-card.success {
+            background: #effaf3;
+            border-left-color: #198754;
+        }
+
+        .validation-card.warning {
+            background: #fff9e6;
+            border-left-color: #ffc107;
+        }
+
+        #detailsModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;
+        }
+
+        .modal-card {
+            background: #fff; width: 580px; max-height: 85vh;
+            border: 3px solid #000; box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
+            border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .modal-header { background: #000; color: #ffc107; padding: 15px 20px; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 25px; overflow-y: auto; flex-grow: 1; }
+
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-group { margin-bottom: 5px; }
+        .info-label { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #888; display: block; margin-bottom: 2px; }
+        .info-value { font-size: 13px; font-weight: 700; color: #000; display: block; }
+        .section-title { grid-column: span 2; font-size: 11px; font-weight: 800; background: #f0f0f0; padding: 5px 10px; margin: 10px 0; text-transform: uppercase; border-left: 4px solid #ffc107; }
+        .notes-box { grid-column: span 2; background: #fff9e6; border: 2px dashed #ffc107; padding: 15px; border-radius: 8px; margin-top: 10px; }
+
+        .table-hover tbody tr { cursor: pointer; }
+        .table-hover tbody tr:hover { background-color: rgba(255, 193, 7, 0.05) !important; }
+    </style>
+</head>
+
+<body>
+<div class="sidebar">
+    <img src="../images/LOGO.jpg" width="125" height="60" alt="CargoConnect Logo">
+    <br>
+    <a href="fleet.html">← BACK TO FLEET</a>
+</div>
+
+<div class="main-content">
+    <div class="manifest-container">
+        <div class="header-section">
+            <div class="vhc-info">
+                <small class="text-muted fw-bold">VEHICLE LOGISTICS MANIFEST</small>
+                <h1 id="displayVehicleID">...</h1>
+                <p class="m-0 mt-3 text-muted fw-bold">CURRENT HUB: <span id="displayLoc" class="hub-label">HUB...</span></p>
+            </div>
+            <div id="vhcStatusArea"></div>
+        </div>
+
+        <div id="vehicleValidationCard" class="validation-card"></div>
+
+        <div class="d-flex justify-content-between align-items-center bg-light p-3 rounded border mb-4">
+            <div><h6 class="m-0 fw-bold">Unit Controls</h6></div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-dark fw-bold btn-sm px-4" onclick="massUpdate('In Transit')">IN TRANSIT ALL</button>
+                <button class="btn btn-warning fw-bold btn-sm px-4" onclick="massUpdate('Delivered')">DELIVER ALL</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>TRACKING ID</th>
+                        <th>DESTINATION</th>
+                        <th>RECIPIENT</th>
+                        <th>STATUS</th>
+                        <th class="text-end">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody id="manifestTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="detailsModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h6 class="m-0 fw-bold">SHIPMENT MANIFEST</h6>
+            <button onclick="closeModal()" style="background:none; border:none; color:#ffc107; font-size:24px;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="modalContent" class="info-grid"></div>
+        </div>
+        <div class="p-3 border-top text-end bg-light">
+            <button class="btn btn-dark btn-sm px-5" onclick="closeModal()">DONE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const vhcID = urlParams.get("id");
+
+function safeParse(key) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+    } catch (e) {
+        console.error("Error parsing key: " + key, e);
+        return null;
+    }
+}
+
+function esc(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function showValidation(message, type = "error") {
+    const card = document.getElementById("vehicleValidationCard");
+    if (!card) {
+        alert(message);
+        return;
+    }
+
+    card.className = "validation-card " + type;
+    card.innerHTML = message;
+    card.style.display = "block";
+
+    setTimeout(function () {
+        card.style.display = "none";
+    }, 4500);
+}
+
+function formatDateTime(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleString();
+}
+
+function getDefaultCapacity(type) {
+    const t = String(type || "").toLowerCase();
+
+    if (t.includes("motor") || t.includes("bike")) return 25;
+    if (t.includes("van")) return 1200;
+    if (t.includes("pickup")) return 1000;
+    if (t.includes("small truck")) return 3000;
+    if (t.includes("medium truck")) return 7000;
+    if (t.includes("large truck") || t === "truck") return 14000;
+    if (t.includes("trailer") || t.includes("semi")) return 24000;
+    if (t.includes("container")) return 28000;
+    if (t.includes("ship")) return 500000;
+
+    return 1000;
+}
+
+function getVehicleKey(id) {
+    if (localStorage.getItem(id)) return id;
+    if (localStorage.getItem("FLT_" + id)) return "FLT_" + id;
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key.startsWith("FLT_")) continue;
+
+        const v = safeParse(key);
+        if (v && v.id === id) return key;
+    }
+
+    return null;
+}
+
+function getVehicleData(id) {
+    const key = getVehicleKey(id);
+    if (!key) return null;
+
+    const v = safeParse(key);
+    if (!v) return null;
+
+    v.storageKey = key;
+
+    if (!v.maxCap) {
+        v.maxCap = getDefaultCapacity(v.type);
+        localStorage.setItem(key, JSON.stringify(v));
+    }
+
+    return v;
+}
+
+function sameVehicle(shipmentVehicleId, vehicle, fleetKey) {
+    if (!shipmentVehicleId || !vehicle) return false;
+
+    const a = String(shipmentVehicleId).trim();
+    const vehicleId = String(vehicle.id || "").trim();
+    const storageKey = String(fleetKey || vehicle.storageKey || "").trim();
+    const storageId = storageKey.replace("FLT_", "");
+
+    return a === vehicleId || a === storageKey || a === storageId;
+}
+
+function getVehicleShipments(includeDelivered = false) {
+    const vData = getVehicleData(vhcID);
+    if (!vData) return [];
+
+    const shipments = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key.startsWith("CC")) continue;
+
+        const s = safeParse(key);
+        if (!s) continue;
+
+        if (sameVehicle(s.vehicleID, vData, vData.storageKey) && (includeDelivered || s.status !== "Delivered")) {
+            shipments.push({ key: key, data: s });
+        }
+    }
+
+    return shipments;
+}
+
+function initPage() {
+    if (!vhcID) {
+        showVehicleError("No vehicle ID was provided.");
+        return;
+    }
+
+    const vData = getVehicleData(vhcID);
+    if (!vData) {
+        showVehicleError("Vehicle not found.");
+        return;
+    }
+
+    document.getElementById("displayVehicleID").innerText = vData.id || vhcID;
+    document.getElementById("displayLoc").innerText = vData.currentLoc || "N/A";
+
+    const activeShipments = getVehicleShipments(false);
+    let totalLoad = 0;
+
+    activeShipments.forEach(function (item) {
+        totalLoad += parseFloat(item.data.weight || 0);
+    });
+
+    const maxCapacity = parseFloat(vData.maxCap || getDefaultCapacity(vData.type));
+
+    if (activeShipments.length === 0 && vData.status === "Dispatched") {
+        vData.status = "At Hub";
+        localStorage.setItem(vData.storageKey, JSON.stringify(vData));
+    }
+
+    const statusArea = document.getElementById("vhcStatusArea");
+
+    if (statusArea) {
+        const loadPerc = Math.min((totalLoad / maxCapacity) * 100, 100);
+
+        statusArea.innerHTML = `
+            <div style="border-left: 5px solid #ffc107; padding-left: 15px;">
+                <span class="badge" style="background-color: ${vData.status === "Dispatched" ? "#000" : "#ffc107"}; color: ${vData.status === "Dispatched" ? "#ffc107" : "#000"}; font-weight: bold; padding: 10px; border: 1px solid #000;">
+                    ${esc(vData.status || "Unknown").toUpperCase()}
+                </span>
+                <div class="mt-2">
+                    <strong>Current Load:</strong> ${totalLoad.toFixed(2)} / ${maxCapacity.toFixed(2)} kg
+                </div>
+                <div style="width: 100%; background: #eee; height: 10px; margin-top: 5px; border: 1px solid #000;">
+                    <div style="width: ${loadPerc}%; background: #ffc107; height: 100%;"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderManifest();
+}
+
+function showVehicleError(message) {
+    const tbody = document.getElementById("manifestTableBody");
+    if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px;">${esc(message)}</td></tr>`;
+    }
+
+    showValidation(message, "error");
+}
+
+function renderManifest() {
+    const tbody = document.getElementById("manifestTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    const shipments = getVehicleShipments(false);
+
+    shipments.forEach(function (item) {
+        const s = item.data;
+        const service = (s.service || "").toLowerCase();
+        const isDoorToDoor = service.includes("door");
+
+        let actionButton = `<button class="btn btn-sm btn-secondary fw-bold" onclick="event.stopPropagation();" disabled>WAITING</button>`;
+
+        if (s.status === "In Transit" && isDoorToDoor) {
+            actionButton = `
+                <button class="btn btn-sm"
+                    style="background-color: #000; color: #ffc107; font-weight: bold; border: 1px solid #ffc107;"
+                    onclick='event.stopPropagation(); updateShipmentStatus(${JSON.stringify(item.key)})'>
+                    ARRIVE HUB
+                </button>`;
+        } else if (s.status === "In Transit" && !isDoorToDoor) {
+            actionButton = `
+                <button class="btn btn-sm"
+                    style="background-color: #ffc107; color: #000; font-weight: bold; border: 1px solid #000;"
+                    onclick='event.stopPropagation(); updateShipmentStatus(${JSON.stringify(item.key)})'>
+                    DELIVER
+                </button>`;
+        } else if ((s.status === "In Hub" || s.status === "Out for Delivery") && isDoorToDoor) {
+            actionButton = `
+                <button class="btn btn-sm"
+                    style="background-color: #ffc107; color: #000; font-weight: bold; border: 1px solid #000;"
+                    onclick='event.stopPropagation(); updateShipmentStatus(${JSON.stringify(item.key)})'>
+                    DELIVER
+                </button>`;
+        }
+
+        tbody.innerHTML += `
+        <tr style="border-bottom: 1px solid #444;" onclick='viewDetails(${JSON.stringify(item.key)})'>
+            <td style="font-weight: bold;">#${esc(s.id)}</td>
+            <td>${esc(s.destination || "N/A")}</td>
+            <td>${esc(s.receiver || "N/A")}</td>
+            <td>
+                <span class="badge" style="background-color: #000; color: #ffc107; border: 1px solid #ffc107;">
+                    ${esc(s.status || "Unknown").toUpperCase()}
+                </span>
+            </td>
+            <td class="text-end">
+                ${actionButton}
+            </td>
+        </tr>`;
+    });
+
+    if (shipments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No active shipments.</td></tr>';
+    }
+}
+
+function viewDetails(key) {
+    const data = safeParse(key);
+    if (!data) {
+        showValidation("Shipment details could not be found.", "error");
+        return;
+    }
+
+    const serviceType = (data.service || "").toLowerCase();
+    const hasAddress = data.address && data.address.trim() !== "";
+    const showAddress = serviceType.includes("door") || hasAddress;
+    const shipmentNotes = data.notes || data.note || data.instructions || data.specialNotes || "No special instructions provided.";
+    const bookedAt = data.timestamp || formatDateTime(data.createdAt) || "N/A";
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="section-title">Logistics Info</div>
+        <div class="info-group"><span class="info-label">Tracking ID</span><span class="info-value" style="color:#d9534f;">${esc(data.id || "N/A")}</span></div>
+        <div class="info-group"><span class="info-label">Current Status</span><span class="info-value text-primary">${esc(data.status || "Pending")}</span></div>
+        <div class="info-group"><span class="info-label">Booked At</span><span class="info-value">${esc(bookedAt)}</span></div>
+        <div class="info-group"><span class="info-label">In Transit At</span><span class="info-value">${esc(data.inTransitAt || formatDateTime(data.inTransitAtISO) || "Not yet")}</span></div>
+        <div class="info-group"><span class="info-label">Out for Delivery At</span><span class="info-value">${esc(data.outForDeliveryAt || data.inHubAt || formatDateTime(data.outForDeliveryAtISO || data.inHubAtISO) || "Not yet")}</span></div>
+        <div class="info-group"><span class="info-label">Delivered At</span><span class="info-value">${esc(data.deliveredAt || formatDateTime(data.deliveredAtISO) || "Not yet")}</span></div>
+        <div class="info-group"><span class="info-label">Service Mode</span><span class="info-value">${esc(data.service || "Standard")}</span></div>
+        <div class="info-group"><span class="info-label">Cargo Type</span><span class="info-value">${esc(data.cargoType || "Standard")}</span></div>
+        <div class="info-group"><span class="info-label">Weight</span><span class="info-value">${esc(data.weight || "0")} kg</span></div>
+        <div class="info-group"><span class="info-label">Cubic Meters</span><span class="info-value">${esc(data.cubicMeters || "N/A")} m³</span></div>
+        <div class="info-group"><span class="info-label">Contact</span><span class="info-value">${esc(data.contact || "No Contact Number")}</span></div>
+        <div class="info-group"><span class="info-label">Assigned Vehicle</span><span class="info-value">${esc(data.vehicleID || "Not assigned")}</span></div>
+
+        <div class="section-title">Payment</div>
+        <div class="info-group"><span class="info-label">Payment Method</span><span class="info-value">${esc(data.paymentMethod || "N/A")}</span></div>
+        <div class="info-group"><span class="info-label">Payment Status</span><span class="info-value">${esc(data.paymentStatus || "Unpaid")}</span></div>
+        <div class="info-group"><span class="info-label">Payment Ref</span><span class="info-value">${esc(data.paymentReference || "N/A")}</span></div>
+        <div class="info-group"><span class="info-label">Paid At</span><span class="info-value">${esc(data.paidAt || "Not paid yet")}</span></div>
+
+        <div class="section-title">Customer Details</div>
+        <div class="info-group"><span class="info-label">Sender Name</span><span class="info-value">${esc(data.sender || "---")}</span></div>
+        <div class="info-group"><span class="info-label">Receiver Name</span><span class="info-value">${esc(data.receiver || "---")}</span></div>
+
+        <div class="section-title">Route & Destination</div>
+        <div class="info-group"><span class="info-label">Origin Hub</span><span class="info-value">${esc(data.origin || "---")}</span></div>
+        <div class="info-group"><span class="info-label">Destination Hub</span><span class="info-value">${esc(data.destination || "---")}</span></div>
+
+        ${
+            showAddress
+                ? `
+                    <div class="info-group" style="grid-column: span 2;">
+                        <span class="info-label">Complete Delivery Address</span>
+                        <span class="info-value">${esc(data.address)}</span>
+                    </div>
+                `
+                : `
+                    <div class="info-group" style="grid-column: span 2; opacity: 0.7;">
+                        <span class="info-label">Pickup Type</span>
+                        <span class="info-value">Station Pickup (Hub-to-Hub)</span>
+                    </div>
+                `
+        }
+
+        <div class="section-title">Special Notes / Instructions</div>
+        <div class="notes-box">
+            <span class="info-value" style="font-weight: 500; line-height: 1.5;">${esc(shipmentNotes)}</span>
+        </div>
+    `;
+
+    document.getElementById("detailsModal").style.display = "flex";
+}
+
+function updateShipmentStatus(fullKey) {
+    const s = safeParse(fullKey);
+
+    if (!s) {
+        showValidation("Shipment data could not be found.", "error");
+        return;
+    }
+
+    const service = (s.service || "").toLowerCase();
+    const isDoorToDoor = service.includes("door");
+
+    if (s.status === "Delivered") {
+        showValidation("This shipment is already delivered.", "warning");
+        return;
+    }
+
+    if (s.status === "In Transit" && isDoorToDoor) {
+        if (!confirm("Mark shipment " + s.id + " as arrived at destination hub and out for delivery?")) {
+            showValidation("Hub arrival cancelled.", "warning");
+            return;
+        }
+
+        s.status = "Out for Delivery";
+        s.outForDeliveryAt = new Date().toLocaleString();
+        s.outForDeliveryAtISO = new Date().toISOString();
+
+        s.inHubAt = s.outForDeliveryAt;
+        s.inHubAtISO = s.outForDeliveryAtISO;
+
+        localStorage.setItem(fullKey, JSON.stringify(s));
+
+        showValidation("Shipment " + s.id + " is now Out for Delivery.", "success");
+        initPage();
+        return;
+    }
+
+    if (s.status === "In Transit" && !isDoorToDoor) {
+        if (!confirm("Mark shipment " + s.id + " as delivered at destination hub?")) {
+            showValidation("Delivery cancelled.", "warning");
+            return;
+        }
+
+        s.status = "Delivered";
+        s.deliveredAt = new Date().toLocaleString();
+        s.deliveredAtISO = new Date().toISOString();
+
+        localStorage.setItem(fullKey, JSON.stringify(s));
+
+        showValidation("Shipment " + s.id + " marked as delivered.", "success");
+        initPage();
+        return;
+    }
+
+    if ((s.status === "In Hub" || s.status === "Out for Delivery") && isDoorToDoor) {
+        if (!confirm("Mark shipment " + s.id + " as delivered to the customer?")) {
+            showValidation("Delivery cancelled.", "warning");
+            return;
+        }
+
+        s.status = "Delivered";
+        s.deliveredAt = new Date().toLocaleString();
+        s.deliveredAtISO = new Date().toISOString();
+
+        localStorage.setItem(fullKey, JSON.stringify(s));
+
+        showValidation("Shipment " + s.id + " marked as delivered.", "success");
+        initPage();
+        return;
+    }
+
+    showValidation("This shipment cannot move to the next step yet.", "warning");
+}
+
+function massUpdate(newStatus) {
+    const vData = getVehicleData(vhcID);
+
+    if (!vData) {
+        showValidation("Vehicle not found.", "error");
+        return;
+    }
+
+    const shipments = getVehicleShipments(false);
+
+    if (shipments.length === 0) {
+        showValidation("There are no active shipments to update.", "warning");
+        return;
+    }
+
+    if (newStatus === "In Transit") {
+        if (vData.status !== "Dispatched") {
+            showValidation("Dispatch this vehicle from the fleet page before marking shipments in transit.", "warning");
+            return;
+        }
+
+        const alreadyTransit = shipments.every(function (item) {
+            return item.data.status === "In Transit";
+        });
+
+        if (alreadyTransit) {
+            showValidation("All active shipments are already in transit.", "warning");
+            return;
+        }
+
+        if (!confirm("Mark all active shipments for " + vData.id + " as In Transit?")) {
+            showValidation("Mass update cancelled.", "warning");
+            return;
+        }
+
+        shipments.forEach(function (item) {
+            if (item.data.status !== "Delivered") {
+                item.data.status = "In Transit";
+
+                if (!item.data.inTransitAt) {
+                    item.data.inTransitAt = new Date().toLocaleString();
+                    item.data.inTransitAtISO = new Date().toISOString();
+                }
+
+                localStorage.setItem(item.key, JSON.stringify(item.data));
+            }
+        });
+
+        showValidation("All selected shipments were updated to In Transit.", "success");
+        initPage();
+        return;
+    }
+
+    if (newStatus === "Delivered") {
+        const invalidShipment = shipments.some(function (item) {
+            const service = (item.data.service || "").toLowerCase();
+            const isDoorToDoor = service.includes("door");
+
+            if (isDoorToDoor) {
+                return item.data.status !== "In Hub" && item.data.status !== "Out for Delivery";
+            }
+
+            return item.data.status !== "In Transit";
+        });
+
+        if (invalidShipment) {
+            showValidation("Door-to-Door shipments must be Out for Delivery before delivery. Hub-to-Hub shipments must be In Transit.", "warning");
+            return;
+        }
+
+        if (!confirm("Deliver all eligible shipment(s) for " + vData.id + "?")) {
+            showValidation("Deliver all cancelled.", "warning");
+            return;
+        }
+
+        shipments.forEach(function (item) {
+            item.data.status = "Delivered";
+            item.data.deliveredAt = new Date().toLocaleString();
+            item.data.deliveredAtISO = new Date().toISOString();
+
+            localStorage.setItem(item.key, JSON.stringify(item.data));
+        });
+
+        showValidation("All eligible shipments were delivered.", "success");
+        initPage();
+    }
+}
+
+function closeModal() {
+    document.getElementById("detailsModal").style.display = "none";
+}
+
+window.onload = initPage;
+</script>
+<script src="cargo-api.js"></script>
+<script>
+let vehicleRecord = null;
+let vehicleShipments = [];
+
+window.onload = async function () {
+    await initDatabaseVehiclePage();
+};
+
+async function initDatabaseVehiclePage() {
+    if (!vhcID) {
+        showVehicleError("No vehicle ID was provided.");
+        return;
+    }
+
+    try {
+        vehicleRecord = await cargoGetVehicle(vhcID);
+        const allShipments = await cargoGetShipments();
+        vehicleShipments = allShipments.filter(function (shipment) {
+            return shipment.vehicleID === vhcID && shipment.status !== "Delivered" && shipment.status !== "Cancelled";
+        });
+    } catch (error) {
+        console.error("Database vehicle load failed:", error);
+        showVehicleError("Could not load vehicle from database: " + error.message);
+        return;
+    }
+
+    if (!vehicleRecord) {
+        showVehicleError("Vehicle not found in database.");
+        return;
+    }
+
+    document.getElementById("displayVehicleID").innerText = vehicleRecord.fleet_id;
+    document.getElementById("displayLoc").innerText = vehicleRecord.current_hub_location || "N/A";
+
+    const totalLoad = vehicleShipments.reduce((sum, shipment) => sum + Number(shipment.weight || 0), 0);
+    const maxCapacity = Number(vehicleRecord.weight_capacity_kg || 0);
+    const loadPerc = maxCapacity > 0 ? Math.min((totalLoad / maxCapacity) * 100, 100) : 0;
+
+    const statusArea = document.getElementById("vhcStatusArea");
+    if (statusArea) {
+        statusArea.innerHTML = `
+            <div style="border-left: 5px solid #ffc107; padding-left: 15px;">
+                <span class="badge" style="background-color: ${vehicleRecord.operational_status === "dispatched" ? "#000" : "#ffc107"}; color: ${vehicleRecord.operational_status === "dispatched" ? "#ffc107" : "#000"}; font-weight: bold; padding: 10px; border: 1px solid #000;">
+                    ${esc(vehicleRecord.operational_status || "Unknown").toUpperCase()}
+                </span>
+                <div class="mt-2"><strong>Current Load:</strong> ${totalLoad.toFixed(2)} / ${maxCapacity.toFixed(2)} kg</div>
+                <div style="width: 100%; background: #eee; height: 10px; margin-top: 5px; border: 1px solid #000;">
+                    <div style="width: ${loadPerc}%; background: #ffc107; height: 100%;"></div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderManifest();
+}
+
+function getVehicleShipments() {
+    return vehicleShipments.map(shipment => ({ key: shipment.id, data: shipment }));
+}
+
+function renderManifest() {
+    const tbody = document.getElementById("manifestTableBody");
+    if (!tbody) return;
+
+    if (vehicleShipments.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No active database shipments.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = vehicleShipments.map(function (s) {
+        const isDoorToDoor = (s.service || "").toLowerCase().includes("door");
+        let actionButton = `<button class="btn btn-sm btn-secondary fw-bold" onclick="event.stopPropagation();" disabled>WAITING</button>`;
+
+        if (s.status === "In Transit" && isDoorToDoor) {
+            actionButton = `<button class="btn btn-sm" style="background-color:#000;color:#ffc107;font-weight:bold;border:1px solid #ffc107;" onclick="event.stopPropagation(); updateShipmentStatus('${esc(s.id)}')">ARRIVE HUB</button>`;
+        } else if (s.status === "In Transit" && !isDoorToDoor) {
+            actionButton = `<button class="btn btn-sm" style="background-color:#ffc107;color:#000;font-weight:bold;border:1px solid #000;" onclick="event.stopPropagation(); updateShipmentStatus('${esc(s.id)}')">DELIVER</button>`;
+        } else if (s.status === "Out for Delivery") {
+            actionButton = `<button class="btn btn-sm" style="background-color:#ffc107;color:#000;font-weight:bold;border:1px solid #000;" onclick="event.stopPropagation(); updateShipmentStatus('${esc(s.id)}')">DELIVER</button>`;
+        }
+
+        return `
+            <tr style="border-bottom:1px solid #444;" onclick="viewDetails('${esc(s.id)}')">
+                <td style="font-weight:bold;">#${esc(s.id)}</td>
+                <td>${esc(s.destination || "N/A")}</td>
+                <td>${esc(s.receiver || "N/A")}</td>
+                <td><span class="badge" style="background-color:#000;color:#ffc107;border:1px solid #ffc107;">${esc(s.status || "Unknown").toUpperCase()}</span></td>
+                <td class="text-end">${actionButton}</td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function viewDetails(key) {
+    const data = vehicleShipments.find(shipment => shipment.id === key);
+    if (!data) return showValidation("Shipment details could not be found.", "error");
+
+    document.getElementById("modalContent").innerHTML = `
+        <div class="section-title">Logistics Info</div>
+        <div class="info-group"><span class="info-label">Tracking ID</span><span class="info-value" style="color:#d9534f;">${esc(data.id)}</span></div>
+        <div class="info-group"><span class="info-label">Current Status</span><span class="info-value text-primary">${esc(data.status)}</span></div>
+        <div class="info-group"><span class="info-label">Service Mode</span><span class="info-value">${esc(data.service || "Standard")}</span></div>
+        <div class="info-group"><span class="info-label">Cargo Type</span><span class="info-value">${esc(data.cargoType || "Standard")}</span></div>
+        <div class="info-group"><span class="info-label">Weight</span><span class="info-value">${esc(data.weight || "0")} kg</span></div>
+        <div class="info-group"><span class="info-label">Receiver</span><span class="info-value">${esc(data.receiver || "---")}</span></div>
+        <div class="section-title">Route</div>
+        <div class="info-group"><span class="info-label">Origin Hub</span><span class="info-value">${esc(data.origin || "---")}</span></div>
+        <div class="info-group"><span class="info-label">Destination Hub</span><span class="info-value">${esc(data.destination || "---")}</span></div>
+    `;
+    document.getElementById("detailsModal").style.display = "flex";
+}
+
+async function updateShipmentStatus(shipmentId) {
+    const shipment = vehicleShipments.find(item => item.id === shipmentId);
+    if (!shipment) return showValidation("Shipment data could not be found.", "error");
+
+    const isDoorToDoor = (shipment.service || "").toLowerCase().includes("door");
+    let action = null;
+    let label = "";
+
+    if (shipment.status === "In Transit" && isDoorToDoor) {
+        action = "mark_out_for_delivery";
+        label = "mark as Out for Delivery";
+    } else if (shipment.status === "In Transit" || shipment.status === "Out for Delivery") {
+        action = "mark_delivered";
+        label = "mark as Delivered";
+    }
+
+    if (!action) return showValidation("This shipment cannot move to the next step yet.", "warning");
+    if (!confirm("Confirm " + label + " for shipment " + shipmentId + "?")) return;
+
+    try {
+        await cargoAdmin(action, {
+            shipment_id: shipmentId,
+            current_location: shipment.destination || "system"
+        });
+
+        showValidation("Shipment " + shipmentId + " updated in database.", "success");
+        await initDatabaseVehiclePage();
+    } catch (error) {
+        showValidation("Status update failed: " + error.message, "error");
+    }
+}
+
+async function massUpdate(newStatus) {
+    if (vehicleShipments.length === 0) return showValidation("There are no active shipments to update.", "warning");
+
+    if (newStatus === "In Transit") {
+        if (vehicleRecord.operational_status !== "dispatched") {
+            return showValidation("Dispatch this vehicle from the fleet page first.", "warning");
+        }
+
+        if (!confirm("Mark all active shipments for " + vhcID + " as In Transit?")) return;
+
+        try {
+            await cargoAdmin("dispatch_fleet", { fleet_id: vhcID });
+            showValidation("All assigned shipments are In Transit.", "success");
+            await initDatabaseVehiclePage();
+        } catch (error) {
+            showValidation("Mass update failed: " + error.message, "error");
+        }
+    }
+
+    if (newStatus === "Delivered") {
+        if (!confirm("Deliver all eligible shipment(s) for " + vhcID + "?")) return;
+
+        try {
+            for (const shipment of vehicleShipments) {
+                const isDoorToDoor = (shipment.service || "").toLowerCase().includes("door");
+                if ((!isDoorToDoor && shipment.status === "In Transit") || shipment.status === "Out for Delivery") {
+                    await cargoAdmin("mark_delivered", { shipment_id: shipment.id });
+                }
+            }
+
+            showValidation("Eligible shipments were delivered.", "success");
+            await initDatabaseVehiclePage();
+        } catch (error) {
+            showValidation("Deliver all failed: " + error.message, "error");
+        }
+    }
+}
+</script>
+</body>
+</html>

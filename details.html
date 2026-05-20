@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipment Details | CargoConnect</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root { --primary-gold: #ffc107; --dark-bg: #000000; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f4f7f6; padding-top: 100px; }
+
+        .navbar-custom {
+            background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px);
+            padding: 15px 5%; position: fixed; width: 100%; top: 0; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .navbar-custom h2 { color: var(--primary-gold); font-weight: 700; margin: 0; }
+        .nav-links a { color: white; text-decoration: none; margin-left: 25px; text-transform: uppercase; font-size: 0.8rem; }
+
+        .details-container { max-width: 900px; margin: 20px auto; padding: 20px; }
+
+        .status-container {
+            background: white; padding: 40px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px;
+        }
+
+        .progress-track {
+            display: flex; justify-content: space-between; position: relative; margin-bottom: 30px;
+        }
+
+        .progress-track::before {
+            content: ''; position: absolute; top: 15px; left: 0; width: 100%; height: 3px; background: #eee; z-index: 0;
+        }
+
+        .step { position: relative; z-index: 1; text-align: center; flex: 1; }
+        .progress-track.hub-only #step-out { display: none; }
+
+        .step .dot { width: 30px; height: 30px; background: white; border: 3px solid #eee; border-radius: 50%; margin: 0 auto 10px; transition: 0.3s; }
+        .step.active .dot { border-color: var(--primary-gold); background: var(--dark-bg); }
+        .step.active label { color: var(--dark-bg); font-weight: 700; }
+        .step label { font-size: 0.7rem; text-transform: uppercase; color: #bbb; }
+
+        .info-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .main-info { background: white; padding: 30px; border-radius: 20px; border-left: 5px solid var(--dark-bg); }
+        .side-info { background: var(--dark-bg); color: white; padding: 30px; border-radius: 20px; display: flex; flex-direction: column; justify-content: center; text-align: center; }
+
+        .info-row { margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
+        .info-row label { display: block; font-size: 0.7rem; color: #999; text-transform: uppercase; }
+        .info-row span { font-weight: 600; color: #333; }
+
+        .btn-cancel {
+            width: 100%; margin-top: 20px; padding: 12px;
+            border-radius: 10px; font-weight: 700; border: 1px solid #dc3545; color: #dc3545; background: transparent; transition: 0.3s;
+        }
+
+        .btn-cancel:hover { background: #dc3545; color: white; }
+
+        .tag-badge { background: var(--primary-gold); color: var(--dark-bg); padding: 4px 12px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; }
+
+        @media (max-width: 768px) {
+            .info-grid { grid-template-columns: 1fr; }
+            .status-container { padding: 25px 15px; }
+            .step label { font-size: 0.6rem; }
+        }
+    </style>
+</head>
+
+<body>
+<nav class="navbar-custom">
+    <img src="../images/LOGO.jpg" width="125" height="60" alt="CargoConnect Logo">
+
+    <div class="nav-links">
+        <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="tracking.html"><i class="fa-solid fa-location-dot"></i> Track</a>
+        <a href="book.html"><i class="fa-solid fa-file-pen"></i> Book</a>
+        <a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a>
+        <a href="index.html" onclick="return confirmLogout(event)">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+    </div>
+</nav>
+
+<div class="details-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold m-0" id="displayID">ID: ---</h4>
+        <span class="tag-badge" id="displayStatus">PENDING</span>
+    </div>
+
+    <div class="status-container">
+        <div class="progress-track" id="progressTrack">
+            <div class="step" id="step-pending"><div class="dot"></div><label>Booked</label></div>
+            <div class="step" id="step-transit"><div class="dot"></div><label>In Transit</label></div>
+            <div class="step" id="step-out"><div class="dot"></div><label>Out for Delivery</label></div>
+            <div class="step" id="step-delivered"><div class="dot"></div><label>Delivered</label></div>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="main-info">
+            <div class="info-row"><label>Route</label><span id="route">---</span></div>
+            <div class="info-row"><label>Booked At</label><span id="bookedAt">---</span></div>
+            <div class="info-row" id="transitAtBox" style="display:none;"><label>In Transit At</label><span id="transitAt">---</span></div>
+            <div class="info-row" id="outForDeliveryAtBox" style="display:none;"><label>Out for Delivery At</label><span id="outForDeliveryAt">---</span></div>
+            <div class="info-row" id="deliveredAtBox" style="display:none;"><label>Delivered At</label><span id="deliveredAt">---</span></div>
+            <div class="info-row"><label>Sender</label><span id="sName">---</span></div>
+            <div class="info-row"><label>Receiver</label><span id="rName">---</span></div>
+            <div class="info-row"><label>Cargo Type</label><span id="cargo">---</span></div>
+
+            <div id="addressBox" style="display:none;" class="info-row">
+                <label>Delivery Address</label><span id="address">---</span>
+            </div>
+
+            <button class="btn-cancel" id="cancelBtn" onclick="cancelBooking()">CANCEL BOOKING</button>
+        </div>
+
+        <div class="side-info">
+            <p class="small text-uppercase mb-1" id="sideLabel" style="color: #666;">Booked At</p>
+            <h3 id="expected" style="color: var(--primary-gold); font-weight: 700;">---</h3>
+            <hr style="border-color: #333;">
+            <p class="small">Unit: <b id="vehicleID">---</b></p>
+        </div>
+    </div>
+</div>
+
+<script src="cargo-api.js"></script>
+<script>
+function safeParse(key) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+    } catch {
+        return null;
+    }
+}
+
+function formatDateTime(value) {
+    if (!value) return "";
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+
+    return date.toLocaleString();
+}
+
+function getDisplayTime(localValue, isoValue) {
+    return localValue || formatDateTime(isoValue) || "---";
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+
+    if (confirm("Are you sure you want to log out?")) {
+        localStorage.removeItem("cargoConnectCurrentUser");
+        window.location.href = "index.html";
+    }
+
+    return false;
+}
+
+window.onload = async function() {
+    const id = localStorage.getItem("activeID");
+    let data = null;
+
+    try {
+        data = id ? await cargoGetShipment(id) : null;
+    } catch (error) {
+        console.error("Database shipment load failed:", error);
+        data = safeParse(id);
+    }
+
+    if (!id || !data) {
+        alert("Shipment details were not found.");
+        window.location.href = "tracking.html";
+        return;
+    }
+
+    const status = (data.status || "Pending").toLowerCase();
+    const isDoorToDoor = (data.service || "").toLowerCase().includes("door");
+
+    const bookedAt = getDisplayTime(data.timestamp, data.createdAt);
+    const transitAt = getDisplayTime(data.inTransitAt, data.inTransitAtISO);
+    const outForDeliveryAt = getDisplayTime(data.outForDeliveryAt || data.inHubAt, data.outForDeliveryAtISO || data.inHubAtISO);
+    const deliveredAt = getDisplayTime(data.deliveredAt, data.deliveredAtISO);
+
+    if (!isDoorToDoor) {
+        document.getElementById("progressTrack").classList.add("hub-only");
+    }
+
+    document.getElementById("displayID").innerText = "TRACKING: " + (data.id || id);
+    document.getElementById("displayStatus").innerText = data.status || "Pending";
+    document.getElementById("sName").innerText = data.sender || "---";
+    document.getElementById("rName").innerText = data.receiver || "---";
+    document.getElementById("route").innerText = (data.origin || "---") + " → " + (data.destination || "---");
+
+    document.getElementById("bookedAt").innerText = bookedAt;
+
+    if (data.inTransitAt || data.inTransitAtISO) {
+        document.getElementById("transitAtBox").style.display = "block";
+        document.getElementById("transitAt").innerText = transitAt;
+    }
+
+    if (isDoorToDoor && (data.outForDeliveryAt || data.outForDeliveryAtISO || data.inHubAt || data.inHubAtISO)) {
+        document.getElementById("outForDeliveryAtBox").style.display = "block";
+        document.getElementById("outForDeliveryAt").innerText = outForDeliveryAt;
+    }
+
+    if (data.deliveredAt || data.deliveredAtISO) {
+        document.getElementById("deliveredAtBox").style.display = "block";
+        document.getElementById("deliveredAt").innerText = deliveredAt;
+    }
+
+    const cargoType = data.cargoType || data.handling || "Standard";
+    document.getElementById("cargo").innerText = (data.weight || "0") + " kg - " + cargoType;
+    document.getElementById("vehicleID").innerText = data.vehicleID || "Pending Assignment";
+
+    if (isDoorToDoor && data.address) {
+        document.getElementById("addressBox").style.display = "block";
+        document.getElementById("address").innerText = data.address;
+    }
+
+    document.getElementById("step-pending").classList.add("active");
+
+    if (
+        status.includes("approved") ||
+        status.includes("assigned") ||
+        status.includes("transit") ||
+        status.includes("hub") ||
+        status.includes("out for delivery") ||
+        status.includes("delivered")
+    ) {
+        document.getElementById("step-transit").classList.add("active");
+    }
+
+    if (
+        isDoorToDoor &&
+        (
+            status.includes("hub") ||
+            status.includes("out for delivery") ||
+            status.includes("delivered")
+        )
+    ) {
+        document.getElementById("step-out").classList.add("active");
+    }
+
+    if (status.includes("delivered")) {
+        document.getElementById("step-delivered").classList.add("active");
+    }
+
+    if (status.includes("delivered") && deliveredAt !== "---") {
+        document.getElementById("sideLabel").innerText = "Delivered At";
+        document.getElementById("expected").innerText = deliveredAt;
+    } else if (isDoorToDoor && (status.includes("hub") || status.includes("out for delivery")) && outForDeliveryAt !== "---") {
+        document.getElementById("sideLabel").innerText = "Out for Delivery At";
+        document.getElementById("expected").innerText = outForDeliveryAt;
+    } else if (status.includes("transit") && transitAt !== "---") {
+        document.getElementById("sideLabel").innerText = "In Transit At";
+        document.getElementById("expected").innerText = transitAt;
+    } else {
+        document.getElementById("sideLabel").innerText = "Booked At";
+        document.getElementById("expected").innerText = bookedAt;
+    }
+
+    if (data.status !== "Pending Confirmation" && data.status !== "Approved") {
+        document.getElementById("cancelBtn").style.display = "none";
+    }
+};
+
+async function cancelBooking() {
+    const id = localStorage.getItem("activeID");
+    let data = null;
+
+    try {
+        data = id ? await cargoGetShipment(id) : null;
+    } catch (error) {
+        console.error("Database shipment load failed:", error);
+        data = safeParse(id);
+    }
+
+    if (!id || !data) {
+        alert("Shipment details were not found.");
+        window.location.href = "tracking.html";
+        return;
+    }
+
+    if (data.status !== "Pending Confirmation" && data.status !== "Approved") {
+        alert("This shipment can no longer be cancelled because it has already been processed.");
+        document.getElementById("cancelBtn").style.display = "none";
+        return;
+    }
+
+    if (confirm("Confirm cancellation of shipment " + (data.id || id) + "?")) {
+        try {
+            await cargoAdmin('request_cancellation', {
+                shipment_id: data.id || id,
+                requested_by: data.sender || data.customerEmail || 'Customer',
+                reason: 'Customer cancelled from details page'
+            });
+        } catch (error) {
+            alert("Cancellation was not saved to database: " + error.message);
+            return;
+        }
+
+        localStorage.removeItem("activeID");
+        alert("Cancellation request saved.");
+        window.location.href = "home.html";
+    }
+}
+</script>
+
+</body>
+</html>

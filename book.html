@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Shipment | CargoConnect</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-gold: #ffc107;
+            --dark-bg: #000000;
+            --light-gray: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-gray);
+            color: #000000;
+            padding-top: 80px;
+        }
+
+        .navbar-custom {
+            background: black;
+            backdrop-filter: blur(10px);
+            padding: 15px 5%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgb(0, 0, 0);
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: 400;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover { color: var(--primary-gold); }
+
+        .book-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .steps::before {
+            content: "";
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            width: 90%;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 0;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            width: 25%;
+        }
+
+        .circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #dee2e6;
+            color: #adb5bd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 700;
+            transition: 0.3s;
+        }
+
+        .step.active .circle {
+            background: var(--dark-bg);
+            color: var(--primary-gold);
+            border-color: var(--dark-bg);
+            transform: scale(1.1);
+        }
+
+        .step.completed .circle {
+            background: var(--primary-gold);
+            color: var(--dark-bg);
+            border-color: var(--primary-gold);
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #adb5bd;
+        }
+
+        .step.active .step-label { color: var(--dark-bg); }
+
+        .section-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+
+        .section-box h2 {
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--primary-gold);
+            padding-left: 15px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 10px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 8px 0 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fcfcfc;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-gold);
+            background: #fff;
+        }
+
+        .btn-next {
+            padding: 15px;
+            background: var(--dark-bg);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .btn-next:hover {
+            background: var(--primary-gold);
+            color: var(--dark-bg);
+            transform: translateY(-2px);
+        }
+
+        .btn-next:disabled {
+            background: #ccc;
+            color: #777;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .review-box {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border-left: 5px solid var(--dark-bg);
+            line-height: 1.8;
+        }
+
+        .payment-panel {
+            background: #fff9e6;
+            border: 2px dashed var(--primary-gold);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .amount-box {
+            background: #000;
+            color: #ffc107;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin: 15px 0 25px;
+        }
+
+        .amount-box h3 {
+            margin: 0;
+            font-weight: 800;
+        }
+
+        #notificationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: var(--dark-bg);
+            color: var(--primary-gold);
+            padding: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .modal-body {
+            padding: 30px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar-custom">
+    <img src="../images/LOGO.jpg" width="125" height="60" alt="CargoConnect Logo">
+
+    <div class="nav-links">
+        <a href="home.html"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="tracking.html"><i class="fa-solid fa-location-dot"></i> Track</a>
+        <a href="book.html"><i class="fa-solid fa-file-pen"></i> Book</a>
+        <a href="profile.html"><i class="fa-solid fa-user"></i> Profile</a>
+        <a href="index.html" onclick="return confirmLogout(event)">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </a>
+    </div>
+</nav>
+
+<main class="book-container">
+    <div class="steps">
+        <div class="step active" data-step="1">
+            <div class="circle">1</div>
+            <div class="step-label">Route</div>
+        </div>
+        <div class="step" data-step="2">
+            <div class="circle">2</div>
+            <div class="step-label">Details</div>
+        </div>
+        <div class="step" data-step="3">
+            <div class="circle">3</div>
+            <div class="step-label">Review</div>
+        </div>
+        <div class="step" data-step="4">
+            <div class="circle">4</div>
+            <div class="step-label">Payment</div>
+        </div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-content active" id="step1">
+        <div class="section-box">
+            <h2>Shipment Information</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Origin Hub</label>
+                    <select id="origin">
+                        <optgroup label="Luzon">
+                            <option>Manila Port</option>
+                            <option>Batangas Port</option>
+                            <option>Subic Bay</option>
+                            <option>Cavite Hub</option>
+                        </optgroup>
+                        <optgroup label="Visayas">
+                            <option>Cebu Port</option>
+                            <option>Iloilo Hub</option>
+                            <option>Bacolod Station</option>
+                        </optgroup>
+                        <optgroup label="Mindanao">
+                            <option>Davao Port</option>
+                            <option>Cagayan de Oro</option>
+                            <option>General Santos</option>
+                            <option>Zamboanga Port</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Destination Hub</label>
+                    <select id="destination">
+                        <optgroup label="Luzon">
+                            <option>Manila Port</option>
+                            <option>Batangas Port</option>
+                            <option>Subic Bay</option>
+                            <option>Cavite Hub</option>
+                        </optgroup>
+                        <optgroup label="Visayas">
+                            <option>Cebu Port</option>
+                            <option>Iloilo Hub</option>
+                            <option>Bacolod Station</option>
+                        </optgroup>
+                        <optgroup label="Mindanao">
+                            <option>Davao Port</option>
+                            <option>Cagayan de Oro</option>
+                            <option>General Santos</option>
+                            <option>Zamboanga Port</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="weight" placeholder="0.0" min="0.01" step="0.01">
+                </div>
+
+                <div class="col-md-3">
+                    <label>Cubic Meters (m³)</label>
+                    <input type="number" id="cubicMeters" placeholder="0.0" min="0.01" step="0.01">
+                </div>
+
+                <div class="col-md-3">
+                    <label>Cargo Type</label>
+                    <select id="isFragile">
+                        <option value="Standard">Standard</option>
+                        <option value="Fragile">Fragile</option>
+                        <option value="Perishable">Perishable</option>
+                        <option value="Hazardous">Hazardous</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Service Mode</label>
+                    <select id="serviceType">
+                        <option value="Hub-to-Hub">Pick-up at Hub</option>
+                        <option value="Door-to-Door">Door-to-Door</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn-next mt-3" onclick="goToDetails()">Continue</button>
+        </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-content" id="step2">
+        <div class="section-box">
+            <h2>Contact Details</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Sender Name</label>
+                    <input type="text" id="senderName">
+                </div>
+
+                <div class="col-md-6">
+                    <label>Receiver Name</label>
+                    <input type="text" id="receiverName">
+                </div>
+            </div>
+
+            <label>PH Mobile Number</label>
+            <input type="text" id="contactNumber" placeholder="09123456789" maxlength="11">
+
+            <div id="addressSection" style="display:none;">
+                <hr>
+                <label>Full Delivery Address</label>
+                <textarea id="deliveryAddress" rows="2"></textarea>
+            </div>
+
+            <label>Special Instructions</label>
+            <textarea id="specialInstructions" rows="2"></textarea>
+
+            <button class="btn-next" onclick="prepareReview()">Review Summary</button>
+            <button class="btn btn-link text-muted w-100 mt-2" onclick="nextStep(1)">← Back to Route</button>
+        </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-content" id="step3">
+        <div class="section-box">
+            <h2>Final Confirmation</h2>
+            <div class="review-box" id="reviewOutput"></div>
+
+            <button class="btn-next mt-4" onclick="goToPayment()">Proceed to Payment</button>
+            <button class="btn btn-link text-muted mt-2 w-100" onclick="nextStep(2)">Edit Details</button>
+        </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-content" id="step4">
+        <div class="section-box">
+            <h2>Payment</h2>
+
+            <div class="amount-box">
+                <p class="small text-uppercase mb-1">Amount to Pay</p>
+                <h3 id="paymentAmount">₱0</h3>
+            </div>
+
+            <label>Payment Method</label>
+            <select id="paymentMethod" onchange="renderPaymentFields(); validatePaymentFields();">
+                <option value="">Select payment method...</option>
+                <option value="GCash">GCash</option>
+                <option value="Card">Card</option>
+            </select>
+
+            <div id="paymentFields" class="payment-panel" style="display:none;"></div>
+
+            <button id="payBtn" class="btn-next" onclick="payAndSubmit()" disabled>Pay & Submit Shipment</button>
+            <button class="btn btn-link text-muted mt-2 w-100" onclick="nextStep(3)">← Back to Review</button>
+        </div>
+    </div>
+</main>
+
+<div id="notificationModal">
+    <div class="modal-card">
+        <div id="modalTitle" class="modal-header">MESSAGE</div>
+        <div id="modalBody" class="modal-body"></div>
+        <div class="p-3 text-center">
+            <button id="modalBtn" class="btn btn-warning fw-bold rounded-pill px-5">CONTINUE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function showMessage(title, text, redirectUrl = null) {
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("modalBody").innerHTML = text;
+    document.getElementById("notificationModal").style.display = "flex";
+
+    document.getElementById("modalBtn").onclick = function () {
+        document.getElementById("notificationModal").style.display = "none";
+        if (redirectUrl) window.location.href = redirectUrl;
+    };
+}
+
+function esc(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function getValue(id) {
+    const el = document.getElementById(id);
+    return el ? el.value.trim() : "";
+}
+
+function generateTrackingId() {
+    let id = "CC" + Math.floor(1000 + Math.random() * 9000);
+
+    while (localStorage.getItem(id)) {
+        id = "CC" + Math.floor(1000 + Math.random() * 9000);
+    }
+
+    return id;
+}
+
+function isValidPHMobile(contact) {
+    return /^09\d{9}$/.test(contact);
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+
+    if (confirm("Are you sure you want to log out?")) {
+        localStorage.removeItem("cargoConnectCurrentUser");
+        window.location.href = "index.html";
+    }
+
+    return false;
+}
+
+function nextStep(step) {
+    document.querySelectorAll(".step-content").forEach(s => s.classList.remove("active"));
+    document.getElementById("step" + step).classList.add("active");
+
+    document.querySelectorAll(".step").forEach(s => {
+        const sNum = parseInt(s.getAttribute("data-step"));
+        s.classList.toggle("active", sNum === step);
+        s.classList.toggle("completed", sNum < step);
+    });
+
+    window.scrollTo(0, 0);
+}
+
+function goToDetails() {
+    const origin = getValue("origin");
+    const destination = getValue("destination");
+    const weight = parseFloat(getValue("weight"));
+    const cubicMeters = parseFloat(getValue("cubicMeters"));
+
+    if (!origin || !destination) {
+        return showMessage("MISSING ROUTE", "Please select both origin and destination.");
+    }
+
+    if (origin === destination) {
+        return showMessage("INVALID ROUTE", "Origin and destination cannot be the same.");
+    }
+
+    if (isNaN(weight) || weight <= 0) {
+        return showMessage("INVALID WEIGHT", "Please enter a valid shipment weight.");
+    }
+
+    if (isNaN(cubicMeters) || cubicMeters <= 0) {
+        return showMessage("INVALID VOLUME", "Please enter valid cubic meters.");
+    }
+
+    if (weight > 500000) {
+        return showMessage("WEIGHT TOO HIGH", "The shipment weight is beyond the supported booking limit.");
+    }
+
+    nextStep(2);
+}
+
+function validateContactDetails() {
+    const sender = getValue("senderName");
+    const receiver = getValue("receiverName");
+    const contact = getValue("contactNumber");
+    const service = getValue("serviceType");
+    const address = getValue("deliveryAddress");
+
+    if (!sender || !receiver || !contact) {
+        showMessage("MISSING DATA", "Please fill in sender name, receiver name, and mobile number.");
+        return false;
+    }
+
+    if (sender.length < 2 || receiver.length < 2) {
+        showMessage("INVALID NAME", "Sender and receiver names must be at least 2 characters.");
+        return false;
+    }
+
+    if (!isValidPHMobile(contact)) {
+        showMessage("INVALID MOBILE NUMBER", "Please enter a valid PH mobile number, like <b>09123456789</b>.");
+        return false;
+    }
+
+    if (service === "Door-to-Door" && address.length < 10) {
+        showMessage("ADDRESS REQUIRED", "Please enter a complete delivery address for Door-to-Door service.");
+        return false;
+    }
+
+    return true;
+}
+
+function prepareReview() {
+    if (!validateContactDetails()) return;
+
+    const origin = getValue("origin");
+    const destination = getValue("destination");
+    const weight = parseFloat(getValue("weight") || 0);
+    const cubicMeters = parseFloat(getValue("cubicMeters") || 0);
+            const service = getValue("serviceType");
+    const cargoType = getValue("isFragile");
+    const sender = getValue("senderName");
+    const receiver = getValue("receiverName");
+    const contact = getValue("contactNumber");
+    const address = getValue("deliveryAddress");
+    const estimate = calculateEstimate(weight, cubicMeters, cargoType, service);
+
+    document.getElementById("reviewOutput").innerHTML = `
+        <div><strong>ROUTE:</strong> ${esc(origin)} → ${esc(destination)}</div>
+        <div><strong>SERVICE:</strong> ${esc(service)}</div>
+        <div><strong>CARGO TYPE:</strong> ${esc(cargoType)}</div>
+        <div><strong>WEIGHT:</strong> ${weight.toFixed(2)} kg</div>
+        <div><strong>CUBIC METERS:</strong> ${cubicMeters.toFixed(2)} m³</div>
+        <div><strong>SENDER:</strong> ${esc(sender)}</div>
+        <div><strong>RECEIVER:</strong> ${esc(receiver)}</div>
+        <div><strong>CONTACT:</strong> ${esc(contact)}</div>
+        ${service === "Door-to-Door" ? `<div><strong>ADDRESS:</strong> ${esc(address)}</div>` : ""}
+        <div><strong>VEHICLE:</strong> Admin will assign</div>
+        <div style="margin-top:10px; padding:10px; background:#fff3cd; border-radius:8px;">
+            <strong>ESTIMATED COST: ₱${estimate.toLocaleString()}</strong>
+        </div>
+    `;
+
+    nextStep(3);
+}
+
+function goToPayment() {
+    const weight = parseFloat(getValue("weight") || 0);
+    const cubicMeters = parseFloat(getValue("cubicMeters") || 0);
+    const service = getValue("serviceType");
+    const cargoType = getValue("isFragile");
+    const estimate = calculateEstimate(weight, cubicMeters, cargoType, service);
+
+    document.getElementById("paymentAmount").innerText = "₱" + estimate.toLocaleString();
+    document.getElementById("paymentMethod").value = "";
+    document.getElementById("paymentFields").style.display = "none";
+    document.getElementById("paymentFields").innerHTML = "";
+    document.getElementById("payBtn").disabled = true;
+
+    nextStep(4);
+}
+
+function renderPaymentFields() {
+    const method = getValue("paymentMethod");
+    const box = document.getElementById("paymentFields");
+
+    box.style.display = method ? "block" : "none";
+
+    if (method === "GCash") {
+        box.innerHTML = `
+            <label>GCash Number</label>
+            <input type="text" id="gcashNumber" placeholder="09123456789" maxlength="11" oninput="validatePaymentFields()">
+            <small class="text-muted">School project only. Any valid-looking number is accepted.</small>
+        `;
+    } else if (method === "Card") {
+        box.innerHTML = `
+            <label>Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" oninput="validatePaymentFields()">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Expiry</label>
+                    <input type="text" id="cardExpiry" placeholder="12/30" oninput="validatePaymentFields()">
+                </div>
+                <div class="col-md-6">
+                    <label>CVV</label>
+                    <input type="text" id="cardCVV" placeholder="123" maxlength="4" oninput="validatePaymentFields()">
+                </div>
+            </div>
+
+            <label>Name on Card</label>
+            <input type="text" id="cardName" placeholder="Juan Dela Cruz" oninput="validatePaymentFields()">
+            <small class="text-muted">School project only. These details are not processed.</small>
+        `;
+    } else {
+        box.innerHTML = "";
+    }
+}
+
+function validatePaymentFields() {
+    const method = getValue("paymentMethod");
+    const payBtn = document.getElementById("payBtn");
+
+    if (!method) {
+        payBtn.disabled = true;
+        return false;
+    }
+
+    if (method === "GCash") {
+        const gcashNumber = getValue("gcashNumber");
+        const valid = /^09\d{9}$/.test(gcashNumber);
+        payBtn.disabled = !valid;
+        return valid;
+    }
+
+    if (method === "Card") {
+        const cardNumber = getValue("cardNumber").replace(/\s/g, "");
+        const cardExpiry = getValue("cardExpiry");
+        const cardCVV = getValue("cardCVV");
+        const cardName = getValue("cardName");
+
+        const valid =
+            cardNumber.length >= 12 &&
+            cardExpiry.length >= 4 &&
+            cardCVV.length >= 3 &&
+            cardName.length >= 2;
+
+        payBtn.disabled = !valid;
+        return valid;
+    }
+
+    payBtn.disabled = true;
+    return false;
+}
+
+function payAndSubmit() {
+    if (!validatePaymentFields()) {
+        return showMessage("PAYMENT INCOMPLETE", "Please complete the payment details first.");
+    }
+
+    if (!confirm("Submit payment and create this shipment booking?")) {
+        return showMessage("PAYMENT CANCELLED", "Your shipment was not submitted.");
+    }
+
+    confirmBooking();
+}
+
+async function confirmBooking() {
+    const origin = getValue("origin");
+    const destination = getValue("destination");
+    const weight = parseFloat(getValue("weight"));
+    const cubicMeters = parseFloat(getValue("cubicMeters"));
+    const service = getValue("serviceType");
+    const cargoType = getValue("isFragile");
+    const paymentMethod = getValue("paymentMethod");
+    const estimatedCost = calculateEstimate(weight, cubicMeters, cargoType, service);
+    const currentUser = getCurrentUser();
+
+    if (!origin || !destination || origin === destination) {
+        return showMessage("INVALID ROUTE", "Please go back and check the route details.");
+    }
+
+    if (isNaN(weight) || weight <= 0) {
+        return showMessage("INVALID WEIGHT", "Please go back and enter a valid weight.");
+    }
+
+    if (isNaN(cubicMeters) || cubicMeters <= 0) {
+        return showMessage("INVALID VOLUME", "Please go back and enter valid cubic meters.");
+    }
+
+    if (!validateContactDetails()) return;
+
+    const nowLocal = new Date().toLocaleString();
+    const nowISO = new Date().toISOString();
+
+    const paymentReference = "PAY-" + Math.floor(100000 + Math.random() * 900000);
+
+    const bookingData = {
+        id: "",
+        origin: origin,
+        destination: destination,
+        weight: weight,
+        cubicMeters: cubicMeters,
+        cargoType: cargoType,
+        service: service,
+
+        sender: getValue("senderName"),
+        receiver: getValue("receiverName"),
+        // booking form has phone only; email is not collected in this UI
+        contact: getValue("contactNumber"),
+        address: getValue("deliveryAddress"),
+
+        customerEmail: currentUser ? currentUser.email : "",
+        customerAccountName: currentUser ? currentUser.fullName : "",
+        customerUserId: currentUser ? currentUser.id : "",
+
+        paymentMethod: paymentMethod,
+        paymentStatus: "Paid",
+        paidAt: nowLocal,
+        paidAtISO: nowISO,
+        paymentAmount: estimatedCost,
+        estimatedCost: estimatedCost,
+
+        paymentReference: paymentReference,
+
+        vehicleID: null,
+        status: "Pending Confirmation",
+        stage: "BOOKED",
+
+        timestamp: nowLocal,
+        createdAt: nowISO,
+        instructions: getValue("specialInstructions"),
+
+        // keep raw inputs for possible future sync
+        receiverPhone: getValue("contactNumber"),
+        receiverEmail: ""
+    };
+
+    if (paymentMethod === "GCash") {
+        bookingData.paymentAccount = getValue("gcashNumber");
+    }
+
+    if (paymentMethod === "Card") {
+        bookingData.paymentAccount = "Card ending " + getValue("cardNumber").replace(/\s/g, "").slice(-4);
+    }
+
+    if (!currentUser || !currentUser.id) {
+        return showMessage("LOGIN REQUIRED", "Please log in before submitting a shipment.", "login.html");
+    }
+
+    try {
+        const payload = {
+            customer_id: currentUser.id,
+            receiver_name: bookingData.receiver,
+            receiver_email: bookingData.receiverEmail || "",
+            receiver_phone: bookingData.receiverPhone,
+            receiver_address: bookingData.address || "",
+            origin: bookingData.origin,
+            destination: bookingData.destination,
+            service_type: bookingData.service,
+            handling_type: bookingData.cargoType,
+            weight: bookingData.weight,
+            volume: bookingData.cubicMeters,
+            special_instructions: bookingData.instructions || "",
+            payment_method: bookingData.paymentMethod,
+            transaction_ref: bookingData.paymentReference
+        };
+
+        const apiBase = '../backend/api';
+        const res = await fetch(`${apiBase}/shipments.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const json = await res.json();
+
+        if (!res.ok || !json.success) {
+            throw new Error(json.message || "Shipment was not saved to the database.");
+        }
+
+        bookingData.id = json.shipment_id;
+        bookingData.shipment_id = json.shipment_id;
+        bookingData.invoice_number = json.invoice_number;
+        bookingData.total_amount = json.total_amount;
+        bookingData.paymentAmount = json.total_amount;
+        bookingData.estimatedCost = json.total_amount;
+
+        localStorage.setItem(json.shipment_id, JSON.stringify(bookingData));
+    } catch (error) {
+        console.error('Shipment persist failed:', error);
+        return showMessage("DATABASE SAVE FAILED", esc(error.message || "Shipment was not saved. Please check the backend and database connection."));
+    }
+
+    showMessage(
+        "PAYMENT SUCCESS",
+        `Tracking ID: <b>${esc(bookingData.id)}</b><br>Payment Ref: <b>${esc(bookingData.paymentReference)}</b><br>Please wait for admin confirmation.`,
+        "tracking.html"
+    );
+}
+
+function calculateEstimate(weight, cubicMeters, cargoType = "Standard", service = "Hub-to-Hub") {
+    let total = 150 + weight * 25 + cubicMeters * 300;
+
+    if (cargoType === "Fragile") total += 100;
+    if (cargoType === "Perishable") total += 150;
+    if (cargoType === "Hazardous") total += 250;
+    if (service === "Door-to-Door") total += 200;
+
+    return Math.round(total);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const serviceType = document.getElementById("serviceType");
+    const addressSection = document.getElementById("addressSection");
+
+    if (serviceType && addressSection) {
+        addressSection.style.display = serviceType.value === "Door-to-Door" ? "block" : "none";
+
+        serviceType.addEventListener("change", function () {
+            addressSection.style.display = this.value === "Door-to-Door" ? "block" : "none";
+        });
+    }
+});
+
+function getCurrentUser() {
+    try {
+        return JSON.parse(localStorage.getItem("cargoConnectCurrentUser"));
+    } catch {
+        return null;
+    }
+}
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Shipment Waybill - CargoConnect</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f5f5f5; font-family: 'Courier New', Courier, monospace; padding: 20px; }
+
+        .waybill-container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            border: 2px solid #000;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            border-bottom: 4px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .section-title {
+            background: #000;
+            color: #fff;
+            padding: 5px 10px;
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 15px 0;
+        }
+
+        .info-item label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .info-item span {
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .payment-box {
+            border: 2px solid #000;
+            padding: 18px;
+            margin-top: 15px;
+            background: #fff9e6;
+        }
+
+        .payment-box .amount {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .barcode-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .missing-box {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #fff;
+            border: 2px solid #000;
+            padding: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        @media print {
+            .no-print { display: none; }
+            body { background: #fff; padding: 0; }
+            .waybill-container { border: none; box-shadow: none; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="no-print text-center mb-4">
+    <button onclick="window.print()" class="btn btn-dark px-5 rounded-0">PRINT WAYBILL</button>
+</div>
+
+<div class="waybill-container" id="waybill">
+    <div class="header">
+        <h1>CARGOCONNECT</h1>
+        <div class="text-end">
+            <div id="wb-id" style="font-size: 24px; font-weight: bold;">ID: CC00000</div>
+            <div id="wb-date" style="font-size: 12px;">DATE: --/--/----</div>
+        </div>
+    </div>
+
+    <div class="section-title">Logistics Details</div>
+    <div class="info-grid">
+        <div class="info-item"><label>Service Type</label><span id="wb-service">---</span></div>
+        <div class="info-item"><label>Vehicle ID</label><span id="wb-vehicle">---</span></div>
+        <div class="info-item"><label>Origin</label><span id="wb-origin">---</span></div>
+        <div class="info-item"><label>Destination</label><span id="wb-destination">---</span></div>
+        <div class="info-item"><label>Cargo Weight</label><span id="wb-weight">---</span></div>
+        <div class="info-item"><label>Cubic Meters</label><span id="wb-cubic">---</span></div>
+        <div class="info-item"><label>Cargo Type</label><span id="wb-handling">---</span></div>
+        <div class="info-item"><label>Current Status</label><span id="wb-status">---</span></div>
+    </div>
+
+    <div class="section-title">Payment Details</div>
+    <div class="payment-box">
+        <div class="info-grid" style="padding: 0;">
+            <div class="info-item"><label>Payment Status</label><span id="wb-payment-status">---</span></div>
+            <div class="info-item"><label>Payment Method</label><span id="wb-payment-method">---</span></div>
+            <div class="info-item"><label>Payment Reference</label><span id="wb-payment-ref">---</span></div>
+            <div class="info-item"><label>Paid At</label><span id="wb-paid-at">---</span></div>
+        </div>
+        <div class="mt-3">
+            <label style="font-size: 12px; font-weight: bold; color: #666; text-transform: uppercase;">Total Amount Paid</label>
+            <div class="amount" id="wb-payment-amount">PHP 0</div>
+        </div>
+    </div>
+
+    <div class="section-title">Sender & Receiver</div>
+    <div class="info-grid">
+        <div class="info-item"><label>Sender Name</label><span id="wb-sender">---</span></div>
+        <div class="info-item"><label>Receiver Name</label><span id="wb-receiver">---</span></div>
+        <div class="info-item"><label>Contact Number</label><span id="wb-contact">---</span></div>
+        <div class="info-item"><label>Customer Email</label><span id="wb-email">---</span></div>
+    </div>
+
+    <div id="addressSection" style="display:none;">
+        <div class="section-title">Delivery Address</div>
+        <div style="padding: 15px 0;">
+            <div class="info-item"><label>Full Address</label><span id="wb-address">---</span></div>
+            <div class="info-item mt-2"><label>Landmark</label><span id="wb-landmark">---</span></div>
+        </div>
+    </div>
+
+    <div class="section-title">Shipment Timeline</div>
+    <div class="info-grid">
+        <div class="info-item"><label>Booked At</label><span id="wb-booked-at">---</span></div>
+        <div class="info-item"><label>Confirmed At</label><span id="wb-confirmed-at">---</span></div>
+        <div class="info-item"><label>In Transit At</label><span id="wb-transit-at">---</span></div>
+        <div class="info-item"><label>Out for Delivery At</label><span id="wb-out-at">---</span></div>
+        <div class="info-item"><label>Delivered At</label><span id="wb-delivered-at">---</span></div>
+    </div>
+
+    <div class="section-title">Instructions</div>
+    <div style="padding: 15px 0;">
+        <p id="wb-instructions" style="font-style: italic;">No special instructions.</p>
+    </div>
+
+    <div class="barcode-area">
+        [ SYSTEM GENERATED BARCODE ]<br>
+        <strong id="barcodeText">CC00000</strong><br>
+        INTERNAL USE ONLY - CARGOCONNECT PHILIPPINES
+    </div>
+</div>
+
+<script src="cargo-api.js"></script>
+<script>
+function safeParse(key) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : null;
+    } catch {
+        return null;
+    }
+}
+
+function formatDateTime(value) {
+    if (!value) return "";
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+
+    return date.toLocaleString();
+}
+
+function getDisplayTime(localValue, isoValue) {
+    return localValue || formatDateTime(isoValue) || "---";
+}
+
+function money(value) {
+    const amount = Number(value || 0);
+    return "PHP " + amount.toLocaleString();
+}
+
+window.onload = async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const shipmentID = urlParams.get("id");
+
+    if (!shipmentID) {
+        document.body.innerHTML = '<div class="missing-box">No Tracking ID found.</div>';
+        return;
+    }
+
+    let data = null;
+
+    try {
+        data = await cargoGetShipment(shipmentID);
+    } catch (error) {
+        console.error("Database waybill load failed:", error);
+        data = safeParse(shipmentID);
+    }
+
+    if (!data) {
+        document.body.innerHTML = '<div class="missing-box">Shipment data not found in system.</div>';
+        return;
+    }
+
+    const isDoorToDoor = (data.service || "").toLowerCase().includes("door");
+    const paymentAmount = data.paymentAmount || data.estimatedCost || 0;
+
+    document.getElementById("wb-id").innerText = "ID: " + (data.id || shipmentID);
+    document.getElementById("barcodeText").innerText = data.id || shipmentID;
+    document.getElementById("wb-date").innerText = "GENERATED: " + new Date().toLocaleDateString();
+
+    document.getElementById("wb-service").innerText = data.service || "Hub-to-Hub";
+    document.getElementById("wb-vehicle").innerText = data.vehicleID || "Pending Assignment";
+    document.getElementById("wb-origin").innerText = data.origin || "---";
+    document.getElementById("wb-destination").innerText = data.destination || "---";
+    document.getElementById("wb-weight").innerText = (data.weight || "0") + " KG";
+    document.getElementById("wb-cubic").innerText = (data.cubicMeters || "0") + " m³";
+    document.getElementById("wb-handling").innerText = data.cargoType || data.handling || "Standard";
+    document.getElementById("wb-status").innerText = data.status || "---";
+
+    document.getElementById("wb-payment-status").innerText = data.paymentStatus || "Unpaid";
+    document.getElementById("wb-payment-method").innerText = data.paymentMethod || "---";
+    document.getElementById("wb-payment-ref").innerText = data.paymentReference || "---";
+    document.getElementById("wb-paid-at").innerText = getDisplayTime(data.paidAt, data.paidAtISO);
+    document.getElementById("wb-payment-amount").innerText = money(paymentAmount);
+
+    document.getElementById("wb-sender").innerText = data.sender || "---";
+    document.getElementById("wb-receiver").innerText = data.receiver || "---";
+    document.getElementById("wb-contact").innerText = data.contact || "---";
+    document.getElementById("wb-email").innerText = data.customerEmail || "---";
+
+    document.getElementById("wb-booked-at").innerText = getDisplayTime(data.timestamp, data.createdAt);
+    document.getElementById("wb-confirmed-at").innerText = getDisplayTime(data.confirmedAt, data.confirmedAtISO);
+    document.getElementById("wb-transit-at").innerText = getDisplayTime(data.inTransitAt, data.inTransitAtISO);
+    document.getElementById("wb-out-at").innerText = getDisplayTime(data.outForDeliveryAt || data.inHubAt, data.outForDeliveryAtISO || data.inHubAtISO);
+    document.getElementById("wb-delivered-at").innerText = getDisplayTime(data.deliveredAt, data.deliveredAtISO);
+
+    document.getElementById("wb-instructions").innerText = data.instructions || "No special instructions.";
+
+    if (isDoorToDoor || data.address) {
+        document.getElementById("addressSection").style.display = "block";
+        document.getElementById("wb-address").innerText = data.address || "---";
+        document.getElementById("wb-landmark").innerText = data.landmark || "N/A";
+    }
+};
+</script>
+</body>
+</html>

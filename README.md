@@ -1,148 +1,62 @@
-# CargoConnect Backend API
+# CargoConnect Database
 
-The backend is a PHP/PDO API for the MySQL database defined in `backend/database/schema.sql`.
+This folder contains the complete database schema for the CargoConnect cargo management system.
 
-## Setup
+## Files
 
-1. Import `backend/database/schema.sql` into MySQL/phpMyAdmin.
-2. Update credentials in `backend/config.php` if your MySQL user differs from `root` with an empty password.
-3. Serve the project through XAMPP/WAMP/Apache so frontend requests can reach `backend/api/*.php`.
+- `schema.sql` - Complete database schema including tables, stored procedures, triggers, and initial data
 
-## Endpoints
+## Setup Instructions
 
-### Authentication
+1. **Open phpMyAdmin** in your web browser
+2. **Create a new database** named `cargoconnect_db` (or update the name in the schema if needed)
+3. **Import the schema.sql file**:
+   - Go to the Import tab
+   - Select the `schema.sql` file
+   - Click Go to execute the SQL
 
-- `POST /backend/api/register.php`
-- `POST /backend/api/login.php`
+## Database Components
 
-Registration creates linked rows in `users` and `customers`. Login returns the `users.user_id`; frontend code passes that ID back to profile and shipment endpoints.
+### Tables
+- `users` - User accounts for customers and admins
+- `customers` - Customer profile information
+- `receivers` - Delivery recipient information
+- `fleet` - Fleet vehicles and their status
+- `cargo` - Cargo details for shipments
+- `shipments` - Main shipment records
+- `tracking` - Shipment tracking events
+- `invoices` - Invoice records
+- `payments` - Payment transactions
+- `audit_logs` - System audit trail
+- `cancellation_requests` - Shipment cancellation requests
 
-### Users
+### Stored Procedures
+- `sp_create_customer_user` - Creates new customer user accounts
+- `sp_get_user_by_email` - Retrieves user by email for authentication
+- `sp_create_receiver` - Creates receiver records
+- `sp_create_shipment` - Creates complete shipments with all related records
+- `sp_confirm_shipment` - Confirms shipments after payment
+- `sp_assign_fleet` - Assigns fleet vehicles to shipments
+- `sp_dispatch_fleet` - Dispatches fleet vehicles
+- `sp_mark_out_for_delivery` - Marks shipments for final delivery
+- `sp_mark_delivered` - Marks shipments as delivered
+- `sp_request_cancellation` - Submits cancellation requests
+- `sp_get_shipment_tracking` - Retrieves tracking history
 
-- `GET /backend/api/users.php?user_id=1`
-- `PUT /backend/api/users.php`
+### Triggers
+- `trigger_shipments_after_update` - Logs shipment status changes
+- `trigger_payments_after_insert` - Updates payment status after transactions
+- `trigger_cancellation_requests_after_insert` - Handles cancellation requests
+- `trigger_fleet_after_update` - Logs fleet status changes
 
-`PUT` body:
+### Initial Data
+- Default admin user (admin@cargoconnect.com / admin123)
+- Sample fleet vehicles across Philippine ports
 
-```json
-{
-  "user_id": 1,
-  "full_name": "Juan Dela Cruz",
-  "phone_number": "09123456789",
-  "home_address": "Complete address"
-}
-```
+## Notes
 
-Updates are written to both `users` and `customers`.
-
-### Shipments
-
-- `GET /backend/api/shipments.php`
-- `GET /backend/api/shipments.php?customer_id=1`
-- `POST /backend/api/shipments.php`
-- `PUT /backend/api/shipments.php`
-
-`customer_id` may be either `customers.customer_id` or the logged-in `users.user_id`; the API resolves it to the customer profile.
-
-`POST` body:
-
-```json
-{
-  "customer_id": 1,
-  "receiver_name": "Receiver Name",
-  "receiver_email": "",
-  "receiver_phone": "09123456789",
-  "receiver_address": "Delivery address",
-  "origin": "Manila Port",
-  "destination": "Cebu Port",
-  "service_type": "Door-to-Door",
-  "handling_type": "Fragile",
-  "weight": 10,
-  "volume": 1.5,
-  "special_instructions": "",
-  "payment_method": "GCash",
-  "transaction_ref": "PAY-123456"
-}
-```
-
-Creates `receivers`, `cargo`, `shipments`, `invoices`, `payments`, and initial `tracking` rows.
-
-### Tracking
-
-- `GET /backend/api/tracking.php?shipment_id=CC1234`
-- `GET /backend/api/tracking.php?customer_id=1`
-- `POST /backend/api/tracking.php`
-- `PUT /backend/api/tracking.php`
-
-`POST`/`PUT` body:
-
-```json
-{
-  "shipment_id": "CC1234",
-  "status": "In Transit",
-  "current_location": "Manila Port",
-  "event_notes": "Shipment departed origin hub."
-}
-```
-
-### Fleet
-
-- `GET /backend/api/fleet.php`
-- `GET /backend/api/fleet.php?fleet_id=FLT-1001`
-- `POST /backend/api/fleet.php`
-- `PUT /backend/api/fleet.php`
-
-Uses `operational_status` values from the schema: `available`, `assigned`, `dispatched`, `maintenance`.
-
-### Admin Workflow
-
-- `POST /backend/api/admin.php`
-- `GET /backend/api/admin.php?resource=cancellations`
-
-Supported `action` values:
-
-- `confirm_shipment`
-- `assign_fleet`
-- `dispatch_fleet`
-- `mark_in_transit`
-- `mark_out_for_delivery`
-- `mark_delivered`
-- `request_cancellation`
-- `resolve_cancellation`
-
-Example:
-
-```json
-{
-  "action": "dispatch_fleet",
-  "fleet_id": "FLT-1234",
-  "admin_name": "Admin User"
-}
-```
-
-Dispatching a fleet automatically moves assigned shipments to `in_transit`. Marking a shipment delivered sets `actual_delivery_date` and releases the fleet when it has no more active shipments.
-
-Cancellation requests are stored in `cancellation_requests`, status movement is stored in `tracking`, and every important operation is written to `audit_logs`.
-
-### Bookings Compatibility
-
-- `GET /backend/api/bookings.php`
-- `GET /backend/api/bookings.php?customer_id=1`
-- `PUT /backend/api/bookings.php`
-
-There is no `bookings` table in the current schema. Booking records are represented by `shipments` and related invoice/payment/tracking tables. Use `POST /backend/api/shipments.php` to create new bookings.
-
-## Error Format
-
-All API endpoints return JSON:
-
-```json
-{
-  "success": false,
-  "message": "Error details"
-}
-```
-
-## Verification Notes
-
-PHP CLI was not available in the current shell, so PHP linting could not be run here. JavaScript syntax checks passed for `frontend/cargo-api.js` and the edited inline page scripts.
+- All stored procedures include detailed comments explaining their functionality
+- Triggers automatically maintain audit logs and update related records
+- Foreign key constraints ensure data integrity
+- Row versioning prevents concurrent update conflicts
+- Passwords are hashed using bcrypt for security

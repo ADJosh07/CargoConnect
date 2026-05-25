@@ -53,16 +53,18 @@ function registerUser($userData) {
 
         // Insert into customers table
         $stmt = $pdo->prepare("
-            INSERT INTO customers (user_id, full_name, email_address, phone_number, home_address)
-            VALUES (:user_id, :full_name, LOWER(TRIM(:email)), :phone, :address)
+            INSERT INTO customers (user_id, full_name, company_name, email_address, phone_number, home_address)
+            VALUES (:user_id, :full_name, :company_name, LOWER(TRIM(:email)), :phone, :address)
         ");
         $stmt->execute([
             'user_id' => $userId,
             'full_name' => $userData['full_name'],
+            'company_name' => isset($userData['company_name']) && $userData['company_name'] !== '' ? trim($userData['company_name']) : null,
             'email' => $userData['email'],
             'phone' => $userData['phone'] ?? null,
             'address' => $userData['address'] ?? null
         ]);
+
 
         // Commit transaction
         $pdo->commit();
@@ -105,9 +107,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'full_name' => trim($input['full_name']),
         'email' => trim($input['email']),
         'password' => $input['password'],
+        'company_name' => isset($input['company_name']) ? trim($input['company_name']) : null,
         'phone' => isset($input['phone']) ? trim($input['phone']) : null,
         'address' => isset($input['address']) ? trim($input['address']) : null
     ]);
+
 
     echo json_encode($result);
 

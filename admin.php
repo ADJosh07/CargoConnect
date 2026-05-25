@@ -100,12 +100,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+/** Sends JSON response and exits (admin API helper). */
 function sendJson($payload, $statusCode = 200) {
     http_response_code($statusCode);
     echo json_encode($payload);
     exit;
 }
 
+/** Converts UI or legacy status labels to database enum values. */
 function normalizeActionStatus($value) {
     $map = [
         'Pending Confirmation' => 'pending_confirmation',
@@ -124,6 +126,7 @@ function normalizeActionStatus($value) {
     return str_replace('-', '_', strtolower(trim((string) $value)));
 }
 
+/** Converts database status codes to labels for API responses. */
 function displayActionStatus($value) {
     $map = [
         'pending_confirmation' => 'Pending Confirmation',
@@ -139,6 +142,7 @@ function displayActionStatus($value) {
     return $map[$value] ?? $value;
 }
 
+/** Writes one row to audit_logs for admin actions. */
 function audit(PDO $pdo, $type, $id, $action, $by, $details = '') {
     $stmt = $pdo->prepare("
         INSERT INTO audit_logs (entity_type, entity_id, action_performed, changed_by, change_details)
@@ -153,6 +157,7 @@ function audit(PDO $pdo, $type, $id, $action, $by, $details = '') {
     ]);
 }
 
+/** Loads shipment with customer, receiver, cargo, and invoice details. */
 function getShipment(PDO $pdo, $shipmentId) {
     $stmt = $pdo->prepare("
         SELECT
@@ -183,6 +188,7 @@ function getShipment(PDO $pdo, $shipmentId) {
     return $stmt->fetch();
 }
 
+/** Inserts a tracking timeline event for a shipment. */
 function addTracking(PDO $pdo, $shipmentId, $status, $location, $notes) {
     $stmt = $pdo->prepare("
         INSERT INTO tracking (shipment_id, current_status, current_location, event_notes)
@@ -196,6 +202,7 @@ function addTracking(PDO $pdo, $shipmentId, $status, $location, $notes) {
     ]);
 }
 
+/** Updates shipment_status, sets milestone timestamps, tracking, and audit log. */
 function setShipmentStatus(PDO $pdo, $shipmentId, $status, $location, $notes, $adminName) {
     $status = normalizeActionStatus($status);
     $allowed = ['pending_confirmation', 'approved', 'assigned', 'in_transit', 'out_for_delivery', 'delivered', 'cancelled', 'cancellation_requested'];
@@ -236,6 +243,7 @@ function setShipmentStatus(PDO $pdo, $shipmentId, $status, $location, $notes, $a
     return ['success' => true, 'message' => 'Shipment updated', 'status' => displayActionStatus($status)];
 }
 
+/** Links a fleet vehicle to an approved shipment; marks fleet as assigned. */
 function assignFleet(PDO $pdo, $shipmentId, $fleetId, $adminName) {
     $shipment = getShipment($pdo, $shipmentId);
     if (!$shipment) throw new Exception('Shipment not found');
@@ -273,6 +281,7 @@ function assignFleet(PDO $pdo, $shipmentId, $fleetId, $adminName) {
     return ['success' => true, 'message' => 'Fleet assigned'];
 }
 
+/** Dispatches a fleet vehicle; assigned shipments become in_transit. */
 function dispatchFleet(PDO $pdo, $fleetId, $adminName) {
     $stmt = $pdo->prepare("SELECT * FROM fleet WHERE fleet_id = :fleet_id LIMIT 1");
     $stmt->execute(['fleet_id' => $fleetId]);
@@ -313,6 +322,7 @@ function dispatchFleet(PDO $pdo, $fleetId, $adminName) {
     return ['success' => true, 'message' => 'Fleet dispatched', 'updated_shipments' => count($shipments)];
 }
 
+/** Marks shipment delivered and may return fleet to available at destination hub. */
 function markDelivered(PDO $pdo, $shipmentId, $adminName) {
     $shipment = getShipment($pdo, $shipmentId);
     if (!$shipment) throw new Exception('Shipment not found');
@@ -351,6 +361,7 @@ function markDelivered(PDO $pdo, $shipmentId, $adminName) {
     return $result;
 }
 
+/** Creates a pending cancellation request and updates shipment status. */
 function requestCancellation(PDO $pdo, $shipmentId, $requestedBy, $reason) {
     $shipment = getShipment($pdo, $shipmentId);
     if (!$shipment) throw new Exception('Shipment not found');
@@ -380,6 +391,7 @@ function requestCancellation(PDO $pdo, $shipmentId, $requestedBy, $reason) {
     return ['success' => true, 'message' => 'Cancellation request saved'];
 }
 
+/** Approves or rejects a cancellation request (approved sets shipment cancelled). */
 function resolveCancellation(PDO $pdo, $shipmentId, $status, $adminName) {
     $status = strtolower(trim($status));
     if (!in_array($status, ['approved', 'rejected'], true)) {
@@ -410,6 +422,7 @@ function resolveCancellation(PDO $pdo, $shipmentId, $status, $adminName) {
     return ['success' => true, 'message' => 'Cancellation ' . $status];
 }
 
+/** Returns all cancellation requests joined with shipment route info (GET). */
 function getCancellations() {
     $pdo = getDBConnection();
     $stmt = $pdo->query("

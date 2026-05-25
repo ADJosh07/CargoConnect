@@ -218,6 +218,10 @@ CREATE TABLE cancellation_requests (
     FOREIGN KEY (shipment_id) REFERENCES shipments(shipment_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+
+-- SHOW PROCEDURE STATUS WHERE Db = 'cargoconnect_db';
+--SHOW TRIGGERS WHERE `Trigger` LIKE '%trigger_%';
+
 DELIMITER $$
 
 -- STORED PROCEDURE: sp_create_customer_user

@@ -16,12 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+/** Outputs a JSON response and stops script execution. */
 function sendJson($payload, $statusCode = 200) {
     http_response_code($statusCode);
     echo json_encode($payload);
     exit;
 }
 
+/** Loads user + customer profile joined by user_id. */
 function getProfile($userId) {
     $pdo = getDBConnection();
 
@@ -47,6 +49,7 @@ function getProfile($userId) {
     return $stmt->fetch();
 }
 
+/** Updates name, phone, and address on both users and customers tables. */
 function updateProfile($data) {
     if (empty($data['user_id'])) {
         return ['success' => false, 'message' => 'user_id is required'];

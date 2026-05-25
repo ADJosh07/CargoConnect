@@ -16,18 +16,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+/** Outputs JSON and exits. */
 function sendJson($payload, $statusCode = 200) {
     http_response_code($statusCode);
     echo json_encode($payload);
     exit;
 }
 
+/** Validates and normalizes fleet operational_status values. */
 function normalizeFleetStatus($status) {
     $status = strtolower(trim((string) $status));
     $allowed = ['available', 'assigned', 'dispatched', 'maintenance'];
     return in_array($status, $allowed, true) ? $status : 'available';
 }
 
+/** Returns one vehicle or the full fleet list from the database. */
 function getFleet($fleetId = null) {
     $pdo = getDBConnection();
 
@@ -72,6 +75,7 @@ function getFleet($fleetId = null) {
     return $stmt->fetchAll();
 }
 
+/** Inserts a new fleet row (POST handler). */
 function createFleetVehicle($data) {
     $required = ['vehicle_type', 'weight_capacity_kg', 'current_hub_location'];
 
@@ -120,6 +124,7 @@ function createFleetVehicle($data) {
     return ['success' => true, 'message' => 'Fleet vehicle created successfully', 'fleet_id' => $fleetId];
 }
 
+/** Updates allowed fleet fields such as operational_status (PUT handler). */
 function updateFleetVehicle($fleetId, $data) {
     $allowed = [
         'vehicle_type',

@@ -5,6 +5,7 @@ This folder contains the complete database schema for the CargoConnect cargo man
 ## Files
 
 - `schema.sql` - Complete database schema including tables, stored procedures, triggers, and initial data
+- `../../md/DATABASE_DOCUMENTATION.md` - Database design, normalization analysis, and data dictionary
 
 ## Setup Instructions
 

@@ -301,8 +301,26 @@ function createShipment($data) {
         }
 
         $stmt = $pdo->prepare("
-            INSERT INTO payments (shipment_id, invoice_id, user_id, payment_amount, payment_method, payment_status, transaction_reference)
-            VALUES (:shipment_id, :invoice_id, :user_id, :payment_amount, :payment_method, 'completed', :transaction_reference)
+            INSERT INTO payments (
+                shipment_id,
+                invoice_id,
+                user_id,
+                payment_amount,
+                payment_method,
+                payment_status,
+                transaction_reference,
+                card_last_four_digits
+            )
+            VALUES (
+                :shipment_id,
+                :invoice_id,
+                :user_id,
+                :payment_amount,
+                :payment_method,
+                'completed',
+                :transaction_reference,
+                :card_last_four_digits
+            )
         ");
         $stmt->execute([
             'shipment_id' => $shipmentId,
@@ -310,8 +328,10 @@ function createShipment($data) {
             'user_id' => $userId,
             'payment_amount' => $totalAmount,
             'payment_method' => trim($data['payment_method']),
-            'transaction_reference' => trim($data['transaction_ref'] ?? '')
+            'transaction_reference' => trim($data['transaction_ref'] ?? ''),
+            'card_last_four_digits' => $data['card_last_four_digits'] ?? null
         ]);
+
 
         $stmt = $pdo->prepare("
             INSERT INTO tracking (shipment_id, current_status, current_location, event_notes)
